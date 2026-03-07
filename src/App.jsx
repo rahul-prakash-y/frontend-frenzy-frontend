@@ -5,6 +5,7 @@ import AdminRoute from './components/AdminRoute';
 import SuperAdminRoute from './components/SuperAdminRoute';
 import { Toaster } from 'react-hot-toast';
 import ConfirmModal from './components/ConfirmModal';
+import StudentRecoveryBoundary from './components/StudentRecoveryBoundary';
 
 // Route Component Imports
 import Login from './components/Login';
@@ -100,11 +101,13 @@ function App() {
     }, [initialize]);
 
     return (
-        <Router>
-            <Toaster position="top-right" />
-            <ConfirmModal />
-            <AppRoutes />
-        </Router>
+        <StudentRecoveryBoundary>
+            <Router>
+                <Toaster position="top-right" />
+                <ConfirmModal />
+                <AppRoutes />
+            </Router>
+        </StudentRecoveryBoundary>
     );
 }
 

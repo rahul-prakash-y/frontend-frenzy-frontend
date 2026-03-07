@@ -25,6 +25,27 @@ const BACKEND_POOL = [
 const DEV_URL = import.meta.env.VITE_DEV_API_URL || 'http://localhost:5000/api';
 const IS_DEV = import.meta.env.VITE_FRONTEND_MODE === 'development';
 
+// ─── 2.  Production env-var guard ──────────────────────────────────────────────
+// Runs once at module load time. If this is a production build and zero backend
+// URLs were injected, we surface a loud, actionable error immediately — rather
+// than silently serving 404s or CORS errors to 400 students.
+//
+// FIX: Go to Vercel → Project → Settings → Environment Variables and ensure
+// VITE_API_URL_1 through VITE_API_URL_4 are set for the Production environment,
+// then trigger a fresh redeploy.
+if (!IS_DEV && BACKEND_POOL.length === 0) {
+    console.error(
+        '[apiConfig] 🚨 DEPLOYMENT ERROR: No backend URLs configured.\n' +
+        'The following Vercel environment variables are missing or empty:\n' +
+        '  • VITE_API_URL_1\n' +
+        '  • VITE_API_URL_2\n' +
+        '  • VITE_API_URL_3\n' +
+        '  • VITE_API_URL_4\n' +
+        'All API calls will fail. Add these vars in Vercel → Settings → ' +
+        'Environment Variables and redeploy.'
+    );
+}
+
 // ─── 2.  localStorage key ──────────────────────────────────────────────────────
 const STICKY_SESSION_KEY = 'ff_sticky_backend';
 
