@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShieldCheck, BookOpen, LogOut, Users, PlayCircle, ClipboardCheck, Trophy, ClipboardList, UserCog, UserCheck } from 'lucide-react';
+import { ShieldCheck, BookOpen, LogOut, Users, PlayCircle, ClipboardCheck, Trophy, ClipboardList, UserCog, UserCheck, Activity } from 'lucide-react';
 import { api, useAuthStore } from '../../store/authStore';
 import { API } from '../SuperAdmin/constants';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -28,6 +28,42 @@ const TABS = [
     { id: 'team-scores', label: 'Team Leaderboard', icon: Trophy },
     { id: 'attendance', label: 'Attendance', icon: UserCheck },
 ];
+
+const SystemHealth = () => {
+    const [queueLength, setQueueLength] = useState(0);
+
+    const checkQueue = useCallback(async () => {
+        try {
+            const res = await api.get('/admin/queue-status');
+            setQueueLength(res.data.queueLength || 0);
+        } catch {
+            // Silently ignore failures if the server is unreachable
+        }
+    }, []);
+
+    useEffect(() => {
+        checkQueue();
+        const t = setInterval(checkQueue, 5000); // Pulse every 5 seconds
+        return () => clearInterval(t);
+    }, [checkQueue]);
+
+    const isWarning = queueLength > 50; // Threshold for concern
+
+    return (
+        <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${isWarning
+                ? 'bg-red-50 border-red-200 text-red-600 shadow-sm shadow-red-100'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                }`}
+            title="Active Database Write Queue Size"
+        >
+            <Activity size={14} className={isWarning ? 'animate-pulse text-red-500' : ''} />
+            <span className="text-[10px] font-bold font-mono tracking-widest uppercase">
+                Queue: {queueLength}
+            </span>
+        </div>
+    );
+};
 
 const AdminDashboard = () => {
     const { user, logout } = useAuthStore();
@@ -76,14 +112,17 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Global Sign Out */}
-                    <button
-                        onClick={logout}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 rounded-lg transition-all border border-slate-200 hover:border-red-100 active:scale-95"
-                    >
-                        <LogOut size={14} />
-                        <span className="hidden sm:inline">Sign Out</span>
-                    </button>
+                    {/* System Health & Global Sign Out */}
+                    <div className="flex items-center gap-4">
+                        <SystemHealth />
+                        <button
+                            onClick={logout}
+                            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 rounded-lg transition-all border border-slate-200 hover:border-red-100 active:scale-95"
+                        >
+                            <LogOut size={14} />
+                            <span className="hidden sm:inline">Sign Out</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* 2. TAB NAVIGATION (Rose Theme) */}

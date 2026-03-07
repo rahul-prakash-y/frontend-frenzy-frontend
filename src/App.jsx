@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -6,6 +6,7 @@ import SuperAdminRoute from './components/SuperAdminRoute';
 import { Toaster } from 'react-hot-toast';
 import ConfirmModal from './components/ConfirmModal';
 import StudentRecoveryBoundary from './components/StudentRecoveryBoundary';
+import { AlertTriangle } from 'lucide-react';
 
 // Route Component Imports
 import Login from './components/Login';
@@ -93,6 +94,52 @@ const AppRoutes = () => {
     );
 };
 
+const DuplicateTabGuard = ({ children }) => {
+    const [isDuplicate, setIsDuplicate] = useState(false);
+
+    useEffect(() => {
+        const channel = new BroadcastChannel('ff_tab_sync');
+
+        // Listen for presence of other tabs
+        channel.onmessage = (event) => {
+            if (event.data === 'ping') {
+                // A new tab is asking if anyone is here. Let it know we exist.
+                channel.postMessage('pong');
+            } else if (event.data === 'pong') {
+                // An existing tab responded to our ping. We are the duplicate.
+                setIsDuplicate(true);
+            }
+        };
+
+        // Announce ourselves when we mount
+        channel.postMessage('ping');
+
+        return () => channel.close();
+    }, []);
+
+    if (isDuplicate) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center font-sans tracking-tight">
+                <div className="bg-red-500/10 text-red-500 p-5 rounded-[2rem] mb-8 border border-red-500/20 shadow-2xl shadow-red-500/20">
+                    <AlertTriangle size={56} strokeWidth={2.5} />
+                </div>
+                <h1 className="text-3xl font-black text-white mb-4">
+                    Multiple Sessions Detected
+                </h1>
+                <p className="text-slate-400 max-w-sm mx-auto leading-relaxed font-medium mb-10">
+                    The arena is already active in another browser tab. To prevent data corruption and local storage conflicts, please close this window and use your original session.
+                </p>
+                {/* Fallback UI element since window.close() doesn't always work if not opened by script */}
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-800/50 px-6 py-3 rounded-xl border border-slate-700/50">
+                    Status: Locked
+                </div>
+            </div>
+        );
+    }
+
+    return children;
+};
+
 function App() {
     const initialize = useAuthStore(state => state.initialize);
 
@@ -102,11 +149,13 @@ function App() {
 
     return (
         <StudentRecoveryBoundary>
-            <Router>
-                <Toaster position="top-right" />
-                <ConfirmModal />
-                <AppRoutes />
-            </Router>
+            <DuplicateTabGuard>
+                <Router>
+                    <Toaster position="top-right" />
+                    <ConfirmModal />
+                    <AppRoutes />
+                </Router>
+            </DuplicateTabGuard>
         </StudentRecoveryBoundary>
     );
 }

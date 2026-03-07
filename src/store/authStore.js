@@ -6,7 +6,13 @@ import { getBaseUrl, clearStickySession } from '../config/apiConfig';
 // NOTE: baseURL is intentionally left empty here.
 // The load-balancing request interceptor below sets it dynamically on every
 // request so that each student is always routed to their sticky backend.
-export const api = axios.create();
+export const api = axios.create({
+    // 10s global timeout on every request.
+    // Render free-tier cold starts can take 15–30s, but we don't want
+    // browsers to hang indefinitely. At 10s the request aborts cleanly
+    // with an ECONNABORTED error that the Error Boundary can surface.
+    timeout: 10000,
+});
 
 // ─── Request interceptor ────────────────────────────────────────────────────────
 // Two responsibilities:

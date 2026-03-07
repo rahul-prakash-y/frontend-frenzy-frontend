@@ -1,17 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore, api } from '../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Lock, AlertCircle } from 'lucide-react';
+import { Terminal, Lock, AlertCircle, Loader2, Wifi } from 'lucide-react';
 
 const Login = () => {
     const [studentId, setStudentId] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    // Shows the "waking up the arena" banner only if the health ping is slow
+    const [isWakingUp, setIsWakingUp] = useState(false);
 
     const login = useAuthStore(state => state.login);
     const navigate = useNavigate();
+
+    // ─── Backend Wake-Up Ping ────────────────────────────────────────────────────
+    // Fires a GET /health the instant this page mounts. This triggers Render's
+    // free-tier container to start spinning up immediately, rather than waiting
+    // for the student to finish typing and click "Sign In".
+    //
+    // If the ping takes longer than 2 seconds (cold start in progress) we show
+    // a small, non-intrusive banner. Once the ping resolves, the banner vanishes.
+    // If the ping fails entirely, we silently swallow it — this is a warm-up call,
+    // not a gating check.
+    useEffect(() => {
+        let bannerTimer = null;
+        // AbortController lets us cancel the fetch if the component unmounts
+        const controller = new AbortController();
+
+        const wakeUp = async () => {
+            // Show the "waking up" banner only after 2s of waiting
+            bannerTimer = setTimeout(() => setIsWakingUp(true), 2000);
+
+            try {
+                await api.get('/health', { signal: controller.signal });
+            } catch {
+                // Silently ignore — timeout, network error, or 404 all acceptable.
+                // The wake-up goal is achieved either way (TCP handshake → spin-up).
+            } finally {
+                clearTimeout(bannerTimer);
+                setIsWakingUp(false);
+            }
+        };
+
+        wakeUp();
+
+        return () => {
+            controller.abort();     // Cancel in-flight request on unmount
+            clearTimeout(bannerTimer);
+            setIsWakingUp(false);
+        };
+    }, []); // Empty deps — runs exactly once on mount
+
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -39,6 +80,28 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+
+            {/* ── Wake-Up Banner ─────────────────────────────────────────────────
+                 Appears only if the backend cold-start takes > 2s. Positioned as
+                 a fixed pill at the bottom so it never disrupts the login form. */}
+            <AnimatePresence>
+                {isWakingUp && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 16 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-slate-900/90 backdrop-blur-sm text-white rounded-2xl shadow-2xl border border-white/10"
+                    >
+                        <Loader2 size={15} className="animate-spin text-indigo-400 shrink-0" />
+                        <span className="text-xs font-bold whitespace-nowrap">
+                            Waking up the arena… please wait a moment.
+                        </span>
+                        <Wifi size={13} className="text-indigo-400 shrink-0" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -46,7 +109,7 @@ const Login = () => {
                 className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200/80 overflow-hidden"
             >
                 {/* Top accent */}
-                <div className="h-1.5 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500" />
+                <div className="h-1.5 bg-linear-to-r from-violet-500 via-indigo-500 to-cyan-500" />
 
                 <div className="p-8">
                     {/* Logo */}
