@@ -14,7 +14,7 @@ import AuditLogsTab from '../SuperAdmin/AuditLogsTab';
 import TeamManagerTab from '../SuperAdmin/TeamManagerTab';
 import TeamScoreTab from '../SuperAdmin/TeamScoreTab';
 import AdminManagerTab from '../SuperAdmin/AdminManagerTab';
-import AttendanceTab from './AttendanceTab';
+import AttendanceTab from '../SuperAdmin/AttendanceTab';
 
 const TABS = [
     { id: 'liveops', label: 'Live Operations', icon: PlayCircle },
