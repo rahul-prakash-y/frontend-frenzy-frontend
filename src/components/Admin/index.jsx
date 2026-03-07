@@ -158,6 +158,7 @@ const AdminDashboard = () => {
                                 {activeTab === 'audit' && <AuditLogsTab rounds={rounds} />}
                                 {activeTab === 'teams' && <TeamManagerTab />}
                                 {activeTab === 'team-scores' && <TeamScoreTab />}
+                                {activeTab === 'attendance' && <AttendanceTab />}
                             </div>
                         </div>
 
