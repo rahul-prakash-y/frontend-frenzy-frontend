@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create a configured axios instance for the application
 export const api = axios.create({
-    baseURL: import.meta.env.VITE_FRONTEND_MODE === "development" ? 'http://localhost:5000/api' : 'https://ccc-8z0k.onrender.com/api', // General API base
+    baseURL: import.meta.env.VITE_FRONTEND_MODE === "development" ? 'http://localhost:5000/api' : 'https://frontend-frenzy-backend.onrender.com/api', // General API base
 });
 
 // Interceptor to auto-inject the Auth token if it exists in Zustand state
