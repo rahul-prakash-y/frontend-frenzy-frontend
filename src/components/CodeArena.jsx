@@ -204,9 +204,36 @@ const CodeArena = ({ language = 'javascript' }) => {
 
         setIsSubmitting(true);
         setSubmitError(null);
+
+        // ─── STEP 1: Save backup BEFORE the network request ───────────────────────
+        // This runs synchronously. Even if the tab crashes immediately after,
+        // the payload is already on disk. The key encodes roundId so multiple
+        // in-progress rounds never overwrite each other's backups.
+        const submissionPayload = { endOtp: otpString, answers, pdfUrl };
+        const backupKey = `backup_submission_${roundId}`;
         try {
-            const res = await api.post(`/rounds/${roundId}/submit`, { endOtp: otpString, answers, pdfUrl });
+            localStorage.setItem(backupKey, JSON.stringify({
+                roundId,
+                payload: submissionPayload,
+                savedAt: new Date().toISOString(),
+            }));
+        } catch (storageErr) {
+            // localStorage can throw if storage is full — log and continue,
+            // the real submission still fires.
+            console.warn('[Backup] Could not write to localStorage:', storageErr);
+        }
+
+        // ─── STEP 2: Fire the real API request ────────────────────────────────────
+        try {
+            const res = await api.post(`/rounds/${roundId}/submit`, submissionPayload);
+
+            // ─── STEP 3: Do NOT clear the backup yet ──────────────────────────────
+            // A 200 OK only means the backend accepted the job into its async queue.
+            // It does NOT confirm the DB write completed. We keep the backup alive.
+            // StudentDashboard will clear it once it confirms the round is COMPLETED.
+
             if (res.data.nextRoundId) {
+                // Mid-test section transition — navigate to next section
                 navigate(`/arena/${res.data.nextRoundId}`);
             } else {
                 toast.success("Transmission Successful. Disconnecting from Arena.");
@@ -217,6 +244,8 @@ const CodeArena = ({ language = 'javascript' }) => {
             setEndOtp(['', '', '', '', '', '']);
             otpRefs.current[0]?.focus();
             setIsSubmitting(false);
+            // Keep the backup — the student can retry and the fallback in
+            // StudentDashboard will also attempt a re-fire on next load.
         }
     };
 

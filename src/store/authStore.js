@@ -1,13 +1,22 @@
 import { create } from 'zustand';
 import axios from 'axios';
+import { getBaseUrl, clearStickySession } from '../config/apiConfig';
 
-// Create a configured axios instance for the application
-export const api = axios.create({
-    baseURL: import.meta.env.VITE_FRONTEND_MODE === "development" ? 'http://localhost:5000/api' : 'https://frontend-frenzy-backend.onrender.com/api', // General API base
-});
+// ─── Axios instance ─────────────────────────────────────────────────────────────
+// NOTE: baseURL is intentionally left empty here.
+// The load-balancing request interceptor below sets it dynamically on every
+// request so that each student is always routed to their sticky backend.
+export const api = axios.create();
 
-// Interceptor to auto-inject the Auth token if it exists in Zustand state
+// ─── Request interceptor ────────────────────────────────────────────────────────
+// Two responsibilities:
+//   1. Set the baseURL to the student's sticky backend on EVERY request.
+//   2. Inject the Bearer token if the user is authenticated.
 api.interceptors.request.use((config) => {
+    // Load-balance: resolve the sticky backend at call-time, not module-load-time.
+    // This means we never bake a stale URL into the axios instance.
+    config.baseURL = getBaseUrl();
+
     const token = useAuthStore.getState().token;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -77,6 +86,9 @@ export const useAuthStore = create((set, get) => ({
 
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        // Clear sticky session so the next login gets a fresh random assignment.
+        // This prevents a dead backend from haunting a student across events.
+        clearStickySession();
         set({ user: null, token: null });
     }
 }));

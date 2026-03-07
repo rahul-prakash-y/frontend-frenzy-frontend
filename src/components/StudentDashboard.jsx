@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert } from 'lucide-react';
 import OtpGate from './OtpGate';
@@ -38,6 +38,9 @@ const StudentDashboard = () => {
     const [attendanceStatus, setAttendanceStatus] = useState(null); // 'success', 'error', null
     const [attendanceMessage, setAttendanceMessage] = useState('');
 
+    // Guard: recovery logic must only run once per page session.
+    const hasFiredRecovery = useRef(false);
+
     const fetchRounds = useCallback(async () => {
         try {
             const res = await api.get('/rounds');
@@ -52,6 +55,82 @@ const StudentDashboard = () => {
     useEffect(() => {
         fetchRounds();
     }, [fetchRounds]);
+
+    // ─── STEP 4 & 5: Fallback recovery — silently re-fire dropped submissions ──
+    // Runs once after the first rounds fetch completes. It scans localStorage for
+    // any backup_submission_* entries written by CodeArena on submit.
+    //
+    //  • If the round already shows COMPLETED server-side → the async queue
+    //    processed it fine → clear the stale backup (STEP 5).
+    //  • Otherwise → the backend may have dropped the DB write → silently
+    //    re-fire the original POST payload (STEP 4).
+    //
+    // The re-fire is entirely invisible to the student: no toast, no spinner.
+    // The backend submit route must be idempotent (duplicate submits are no-ops).
+    useEffect(() => {
+        if (loading || hasFiredRecovery.current) return;
+        hasFiredRecovery.current = true;
+
+        const attemptRecovery = async () => {
+            const backupKeys = Object.keys(localStorage).filter(k =>
+                k.startsWith('backup_submission_')
+            );
+            if (backupKeys.length === 0) return;
+
+            // Build a fast lookup: roundId -> mySubmissionStatus from live server data
+            const statusMap = {};
+            rounds.forEach(r => { statusMap[r._id] = r.mySubmissionStatus; });
+
+            for (const key of backupKeys) {
+                let backup;
+                try {
+                    backup = JSON.parse(localStorage.getItem(key));
+                } catch {
+                    localStorage.removeItem(key); // corrupted — discard
+                    continue;
+                }
+
+                if (!backup?.roundId || !backup?.payload) {
+                    localStorage.removeItem(key);
+                    continue;
+                }
+
+                if (statusMap[backup.roundId] === 'COMPLETED') {
+                    // ── STEP 5: Score is confirmed on the server ─────────────────
+                    console.info(`[Recovery] Round ${backup.roundId} is COMPLETED. Clearing backup.`);
+                    localStorage.removeItem(key);
+                } else {
+                    // ── STEP 4: Silent re-fire ───────────────────────────────────
+                    // The backend did not confirm COMPLETED — assume the async
+                    // queue dropped the write. Re-submit the original payload.
+                    console.warn(`[Recovery] Round ${backup.roundId} not COMPLETED ("${statusMap[backup.roundId]}"). Silently re-firing.`);
+                    try {
+                        await api.post(`/rounds/${backup.roundId}/submit`, backup.payload);
+                        // Fetch fresh data to check if the re-fire was confirmed
+                        const updatedRes = await api.get('/rounds');
+                        const updated = (updatedRes.data.data || []).find(
+                            r => r._id === backup.roundId
+                        );
+                        if (updated?.mySubmissionStatus === 'COMPLETED') {
+                            // ── STEP 5 (after re-fire): now confirmed — clear ────
+                            localStorage.removeItem(key);
+                            console.info(`[Recovery] Re-fire confirmed for round ${backup.roundId}. Backup cleared.`);
+                            // Sync UI state with the fresh data
+                            setRounds(updatedRes.data.data || []);
+                        }
+                        // If still not COMPLETED after re-fire, keep the backup.
+                        // The next dashboard load will try again.
+                    } catch (err) {
+                        // Network down or server error — keep backup for next time.
+                        console.error(`[Recovery] Re-fire failed for round ${backup.roundId}:`, err);
+                    }
+                }
+            }
+        };
+
+        attemptRecovery();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading]); // Depends only on `loading` — fires exactly once after first load
 
     const displayRounds = React.useMemo(() => {
         const groups = {};
