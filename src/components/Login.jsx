@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore, api } from '../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Lock, AlertCircle, Loader2, Wifi } from 'lucide-react';
+import SubmitButton from './SubmitButton';
 
 const Login = () => {
     const [studentId, setStudentId] = useState('');
@@ -157,13 +158,15 @@ const Login = () => {
                             </motion.div>
                         )}
 
-                        <button
+                        <SubmitButton
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all mt-2 shadow-md hover:shadow-indigo-200 hover:shadow-lg"
+                            isLoading={isLoading}
+                            loadingText="Signing in…"
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all mt-2 shadow-md hover:shadow-indigo-200 hover:shadow-lg flex items-center justify-center"
                         >
-                            {isLoading ? 'Signing in…' : 'Sign In'}
-                        </button>
+                            Sign In
+                        </SubmitButton>
                     </form>
                 </div>
             </motion.div>

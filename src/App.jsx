@@ -6,7 +6,7 @@ import SuperAdminRoute from './components/SuperAdminRoute';
 import { Toaster } from 'react-hot-toast';
 import ConfirmModal from './components/ConfirmModal';
 import StudentRecoveryBoundary from './components/StudentRecoveryBoundary';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 
 // Route Component Imports
 import Login from './components/Login';
@@ -120,7 +120,7 @@ const DuplicateTabGuard = ({ children }) => {
     if (isDuplicate) {
         return (
             <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center font-sans tracking-tight">
-                <div className="bg-red-500/10 text-red-500 p-5 rounded-[2rem] mb-8 border border-red-500/20 shadow-2xl shadow-red-500/20">
+                <div className="bg-red-500/10 text-red-500 p-5 rounded-4xl mb-8 border border-red-500/20 shadow-2xl shadow-red-500/20">
                     <AlertTriangle size={56} strokeWidth={2.5} />
                 </div>
                 <h1 className="text-3xl font-black text-white mb-4">
@@ -140,6 +140,32 @@ const DuplicateTabGuard = ({ children }) => {
     return children;
 };
 
+const OfflineIndicator = () => {
+    const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+    useEffect(() => {
+        const handleOffline = () => setIsOffline(true);
+        const handleOnline = () => setIsOffline(false);
+
+        window.addEventListener('offline', handleOffline);
+        window.addEventListener('online', handleOnline);
+
+        return () => {
+            window.removeEventListener('offline', handleOffline);
+            window.removeEventListener('online', handleOnline);
+        };
+    }, []);
+
+    if (!isOffline) return null;
+
+    return (
+        <div className="fixed top-0 left-0 right-0 z-9999 bg-red-500 text-white text-xs font-bold font-sans tracking-wide text-center py-2.5 flex items-center justify-center gap-2 shadow-md border-b border-red-600">
+            <WifiOff size={15} />
+            Offline: Your progress is being saved locally. Do not refresh.
+        </div>
+    );
+};
+
 function App() {
     const initialize = useAuthStore(state => state.initialize);
 
@@ -150,6 +176,7 @@ function App() {
     return (
         <StudentRecoveryBoundary>
             <DuplicateTabGuard>
+                <OfflineIndicator />
                 <Router>
                     <Toaster position="top-right" />
                     <ConfirmModal />

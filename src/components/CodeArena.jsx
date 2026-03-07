@@ -12,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api, useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { SkeletonCodeArena } from './Skeleton';
+import SubmitButton from './SubmitButton';
 
 import useContestTimer from '../hooks/useContestTimer';
 import useAutoSave from '../hooks/useAutoSave';
@@ -834,13 +835,15 @@ const CodeArena = ({ language = 'javascript' }) => {
 
                                     <div className="flex gap-3 pt-2">
                                         {!isTimeUp && <button type="button" onClick={() => setIsSubmitModalOpen(false)} disabled={isSubmitting} className="flex-1 px-4 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold transition-all shadow-sm">Cancel</button>}
-                                        <button
+                                        <SubmitButton
                                             type="submit"
                                             disabled={isSubmitting || ((!roundInfo?.hasNextRound || isTimeUp) && endOtp.join('').length !== 6)}
-                                            className={`flex-2 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-black disabled:opacity-50 transition-all shadow-lg text-sm ${isTimeUp ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}
+                                            isLoading={isSubmitting}
+                                            loadingText="Verifying"
+                                            className={`flex-2 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-black transition-all shadow-lg text-sm ${isTimeUp ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}
                                         >
-                                            {isSubmitting ? <><Loader2 size={16} className="animate-spin" /> Verifying</> : (roundInfo?.hasNextRound && !isTimeUp ? <><Send size={16} /> Proceed to Next</> : <><Send size={16} /> Confirm Sequence</>)}
-                                        </button>
+                                            {roundInfo?.hasNextRound && !isTimeUp ? <><Send size={16} /> Proceed to Next</> : <><Send size={16} /> Confirm Sequence</>}
+                                        </SubmitButton>
                                     </div>
                                 </form>
                             </div>
