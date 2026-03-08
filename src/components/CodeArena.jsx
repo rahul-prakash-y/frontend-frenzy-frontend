@@ -71,7 +71,16 @@ const CodeArena = ({ language = 'javascript' }) => {
         }
     }, [roundId, updateUser]);
 
+    // Round types where students must freely paste URLs (Figma / GitHub).
+    // Anti-cheat listeners are completely skipped for these round types.
+    const OPEN_ROUND_TYPES = ['UI_UX_CHALLENGE', 'MINI_HACKATHON'];
+
     useEffect(() => {
+        // ── Open-round bypass ─────────────────────────────────────────────────
+        // UI/UX and Mini Hackathon rounds require students to paste external URLs.
+        // If roundInfo hasn't loaded yet, we also skip (no false positives on mount).
+        if (!roundInfo || OPEN_ROUND_TYPES.includes(roundInfo.type)) return;
+
         const handlePaste = (e) => {
             e.preventDefault();
             handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'PASTE_DETECTED' });
@@ -97,7 +106,8 @@ const CodeArena = ({ language = 'javascript' }) => {
             window.removeEventListener('contextmenu', blockAction, { capture: true });
             window.removeEventListener('keydown', handleKeyDown, { capture: true });
         };
-    }, [handleCheatDetected]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [handleCheatDetected, roundInfo]); // roundInfo in deps so guard re-evaluates after load
 
     // --- Data Loading ---
     useEffect(() => {
