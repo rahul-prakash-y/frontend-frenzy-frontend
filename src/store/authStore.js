@@ -66,9 +66,9 @@ export const useAuthStore = create((set, get) => ({
         set({ user: updatedUser });
     },
 
-    onboard: async (name, email, linkedinProfile, githubProfile, phone, bio, dob, password) => {
+    onboard: async (name, email, linkedinProfile, githubProfile, phone, bio, dob, password, department, gender, accommodation) => {
         try {
-            const res = await api.post('/auth/onboard', { name, email, linkedinProfile, githubProfile, phone, bio, dob, password });
+            const res = await api.post('/auth/onboard', { name, email, linkedinProfile, githubProfile, phone, bio, dob, password, department, gender, accommodation });
             const { token, user } = res.data;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
@@ -76,6 +76,38 @@ export const useAuthStore = create((set, get) => ({
             return { success: true };
         } catch (err) {
             return { success: false, error: err.response?.data?.error || 'Onboarding failed' };
+        }
+    },
+
+    fetchProfile: async () => {
+        try {
+            const res = await api.get('/auth/profile');
+            if (res.data.success) {
+                set({ user: res.data.profile });
+                localStorage.setItem('user', JSON.stringify(res.data.profile));
+                return { success: true, profile: res.data.profile };
+            }
+        } catch (err) {
+            console.error('Failed to fetch profile', err);
+            return { success: false, error: err.response?.data?.error || 'Failed to fetch profile' };
+        }
+    },
+
+    updateProfile: async (profileData) => {
+        try {
+            const res = await api.put('/auth/profile', profileData);
+            if (res.data.success) {
+                const { token, profile } = res.data;
+                if (token) {
+                    localStorage.setItem('token', token);
+                    set({ token });
+                }
+                set({ user: profile });
+                localStorage.setItem('user', JSON.stringify(profile));
+                return { success: true, profile };
+            }
+        } catch (err) {
+            return { success: false, error: err.response?.data?.error || 'Failed to update profile' };
         }
     },
 

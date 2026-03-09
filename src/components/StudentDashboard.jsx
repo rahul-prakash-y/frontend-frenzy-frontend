@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -214,6 +214,14 @@ const StudentDashboard = () => {
                         >
                             <UserCheck size={14} />
                             Mark Attendance
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/profile')}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 rounded-xl hover:bg-violet-600 hover:text-white transition-all active:scale-95 shadow-sm"
+                        >
+                            <User size={14} />
+                            <span className="hidden xs:inline sm:inline">Profile</span>
                         </button>
 
                         <div className="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">

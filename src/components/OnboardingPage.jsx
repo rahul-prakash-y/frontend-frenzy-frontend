@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, ArrowRight, Loader2, Rocket, ShieldCheck, Linkedin, Github, Phone, FileText, Lock, CheckCircle2, Calendar, Mail } from 'lucide-react';
+import { User, ArrowRight, Loader2, Rocket, ShieldCheck, Linkedin, Github, Phone, FileText, Lock, CheckCircle2, Calendar, Mail, Building, Users, Home } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,9 @@ const OnboardingPage = () => {
     const [bio, setBio] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [department, setDepartment] = useState('');
+    const [gender, setGender] = useState('');
+    const [accommodation, setAccommodation] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const { onboard, user } = useAuthStore();
@@ -38,7 +41,7 @@ const OnboardingPage = () => {
 
         setLoading(true);
         setError('');
-        const res = await onboard(name, email, linkedinProfile, githubProfile, phone, bio, dob, password);
+        const res = await onboard(name, email, linkedinProfile, githubProfile, phone, bio, dob, password, department, gender, accommodation);
         setLoading(false);
 
         if (res.success) {
@@ -179,6 +182,65 @@ const OnboardingPage = () => {
                                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium"
                                         required
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative group">
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">
+                                Department
+                            </label>
+                            <div className="relative">
+                                <Building className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-violet-400 transition-colors" size={20} />
+                                <input
+                                    type="text"
+                                    value={department}
+                                    onChange={(e) => setDepartment(e.target.value)}
+                                    placeholder="Enter your department..."
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="relative group">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">
+                                    Gender
+                                </label>
+                                <div className="relative">
+                                    <Users className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-violet-400 transition-colors" size={20} />
+                                    <select
+                                        value={gender}
+                                        onChange={(e) => setGender(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium appearance-none"
+                                        required
+                                    >
+                                        <option value="" disabled>Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                        <option value="Prefer not to say">Prefer not to say</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="relative group">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">
+                                    Accommodation
+                                </label>
+                                <div className="relative">
+                                    <Home className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-violet-400 transition-colors" size={20} />
+                                    <select
+                                        value={accommodation}
+                                        onChange={(e) => setAccommodation(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium appearance-none"
+                                        required
+                                    >
+                                        <option value="" disabled>Select Accommodation</option>
+                                        <option value="Hostel">Hostel</option>
+                                        <option value="Dayscholar">Dayscholar</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

@@ -16,6 +16,7 @@ import AdminDashboard from './components/AdminDashboard';
 import SuperAdminDashboard from './components/SuperAdminDashboard';
 import BlockedAccount from './pages/BlockedAccount';
 import OnboardingPage from './components/OnboardingPage';
+import ProfilePage from './components/ProfilePage';
 
 import { useAuthStore } from './store/authStore';
 
@@ -84,6 +85,16 @@ const AppRoutes = () => {
                 element={
                     <ProtectedRoute>
                         <OnboardingPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Student Profile Page */}
+            <Route
+                path="/profile"
+                element={
+                    <ProtectedRoute>
+                        <ProfilePage />
                     </ProtectedRoute>
                 }
             />
