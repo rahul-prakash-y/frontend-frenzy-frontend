@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -232,7 +232,7 @@ const StudentDashboard = () => {
                             onClick={logout}
                             className="group flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-600 bg-white border border-slate-200 hover:border-red-200 hover:bg-red-50 rounded-xl px-3 sm:px-4 py-2 transition-all shadow-sm active:scale-95"
                         >
-                            <LogOut size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                            <Power size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                             <span className="hidden xs:inline sm:inline">Disconnect</span>
                         </button>
                     </div>

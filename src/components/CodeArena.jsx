@@ -6,7 +6,8 @@ import {
     Terminal, Lock, Send, AlertTriangle, Save,
     ChevronLeft, ChevronRight, CheckCircle, HelpCircle, Code2, LogOut,
     Clock, ArrowRight,
-    Loader2, Eye, EyeOff
+    Loader2, Eye, EyeOff,
+    Power
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, useAuthStore } from '../store/authStore';
@@ -112,20 +113,10 @@ const CodeArena = ({ language = 'javascript' }) => {
             }
         };
 
-        const handleVisibilityChange = () => {
-            if (document.hidden || document.visibilityState === 'hidden') {
-                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'TAB_SWITCH_DETECTED' });
-            }
-        };
-
-        const handleWindowBlur = () => {
-            handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'WINDOW_FOCUS_LOST' });
-        };
-
         let initialWidth = window.innerWidth;
         const handleResize = () => {
-            // If window width changes by more than 50px (to ignore minor scrollbar jitters), it's likely a split screen snap
-            if (Math.abs(window.innerWidth - initialWidth) > 50) {
+            // If window width changes by more than 100px (loosened sensitivity), it's likely a split screen snap
+            if (Math.abs(window.innerWidth - initialWidth) > 100) {
                 handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'SPLIT_SCREEN_DETECTED' });
                 initialWidth = window.innerWidth; // Reset so we don't spam
             }
@@ -137,8 +128,6 @@ const CodeArena = ({ language = 'javascript' }) => {
         window.addEventListener('contextmenu', blockAction, { capture: true });
         window.addEventListener('keydown', handleKeyDown, { capture: true });
         window.addEventListener('resize', handleResize);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleWindowBlur);
 
         return () => {
             window.removeEventListener('paste', handlePaste, { capture: true });
@@ -147,8 +136,6 @@ const CodeArena = ({ language = 'javascript' }) => {
             window.removeEventListener('contextmenu', blockAction, { capture: true });
             window.removeEventListener('keydown', handleKeyDown, { capture: true });
             window.removeEventListener('resize', handleResize);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('blur', handleWindowBlur);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [handleCheatDetected, roundInfo]); // roundInfo in deps so guard re-evaluates after load
@@ -324,7 +311,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                     </p>
                 </div>
                 <button onClick={() => navigate('/dashboard')} className="mt-10 px-8 py-4 bg-indigo-600 text-white font-black tracking-wide rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2 active:scale-95">
-                    <LogOut size={18} /> Return to Dashboard
+                    <Power size={18} /> Return to Dashboard
                 </button>
             </div>
         );
@@ -348,7 +335,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                     </div>
                 </div>
                 <button onClick={() => navigate('/dashboard')} className="mt-10 px-8 py-4 bg-red-600 text-white font-black tracking-wide rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 flex items-center gap-2 active:scale-95">
-                    <LogOut size={18} /> Return to Base
+                    <Power size={18} /> Return to Base
                 </button>
             </div>
         );
