@@ -18,8 +18,13 @@ const SubmitButton = ({ children, onClick, disabled, isLoading, className = "", 
             return;
         }
 
-        // Start 3-second cooldown immediately
-        setIsCoolingDown(true);
+        // Defer cooling down state to the event loop so that
+        // form "submit" events have a chance to fire before the
+        // button becomes disabled.
+        setTimeout(() => {
+            setIsCoolingDown(true);
+        }, 0);
+
         timeoutRef.current = setTimeout(() => {
             setIsCoolingDown(false);
         }, 3000);
