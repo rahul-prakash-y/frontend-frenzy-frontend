@@ -377,6 +377,7 @@ const QuestionModal = ({ question, roundId, onClose, onSave }) => {
                                         <option value="CODE">Programming / Code</option>
                                         <option value="MCQ">Multiple Choice (MCQ)</option>
                                         <option value="DEBUG">Bug Fix / Debug</option>
+                                        <option value="MISSING_BLOCK">Missing Code Block</option>
                                         <option value="FILL_BLANKS">Fill in Blanks</option>
                                         <option value="EXPLAIN">Short Answer / Explain</option>
                                         <option value="UI_UX">UI/UX Submission</option>

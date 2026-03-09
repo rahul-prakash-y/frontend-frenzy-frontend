@@ -85,11 +85,49 @@ const CodeArena = ({ language = 'javascript' }) => {
             e.preventDefault();
             handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'PASTE_DETECTED' });
         };
-        const blockAction = (e) => e.preventDefault();
+        const blockAction = (e) => {
+            e.preventDefault();
+            handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'CONTEXT_MENU_DETECTED' });
+        };
         const handleKeyDown = (e) => {
+            // Block DevTools
+            if (e.key === 'F12') {
+                e.preventDefault();
+                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'DEV_TOOLS_DETECTED' });
+            }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'i' || e.key === 'j' || e.key === 'c')) {
+                e.preventDefault();
+                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'DEV_TOOLS_DETECTED' });
+            }
+            // Block View Source
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
+                e.preventDefault();
+                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'VIEW_SOURCE_DETECTED' });
+            }
+            // Block copy/paste/cut
             if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
                 e.preventDefault();
                 if (e.key === 'v') handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'PASTE_DETECTED' });
+                else handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'COPY_CUT_DETECTED' });
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden || document.visibilityState === 'hidden') {
+                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'TAB_SWITCH_DETECTED' });
+            }
+        };
+
+        const handleWindowBlur = () => {
+            handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'WINDOW_FOCUS_LOST' });
+        };
+
+        let initialWidth = window.innerWidth;
+        const handleResize = () => {
+            // If window width changes by more than 50px (to ignore minor scrollbar jitters), it's likely a split screen snap
+            if (Math.abs(window.innerWidth - initialWidth) > 50) {
+                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'SPLIT_SCREEN_DETECTED' });
+                initialWidth = window.innerWidth; // Reset so we don't spam
             }
         };
 
@@ -98,6 +136,9 @@ const CodeArena = ({ language = 'javascript' }) => {
         window.addEventListener('cut', blockAction, { capture: true });
         window.addEventListener('contextmenu', blockAction, { capture: true });
         window.addEventListener('keydown', handleKeyDown, { capture: true });
+        window.addEventListener('resize', handleResize);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleWindowBlur);
 
         return () => {
             window.removeEventListener('paste', handlePaste, { capture: true });
@@ -105,6 +146,9 @@ const CodeArena = ({ language = 'javascript' }) => {
             window.removeEventListener('cut', blockAction, { capture: true });
             window.removeEventListener('contextmenu', blockAction, { capture: true });
             window.removeEventListener('keydown', handleKeyDown, { capture: true });
+            window.removeEventListener('resize', handleResize);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleWindowBlur);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [handleCheatDetected, roundInfo]); // roundInfo in deps so guard re-evaluates after load
@@ -164,14 +208,20 @@ const CodeArena = ({ language = 'javascript' }) => {
         onCheatDetected: handleCheatDetected
     });
 
-    const { saveStatus } = useAutoSave(answers, roundId, 5000, isTimeUp || isBanned, (responsePayload) => {
+    const { saveStatus } = useAutoSave(answers, roundId, 60000, isTimeUp || isBanned, (responsePayload) => {
         if (responsePayload.extraTimeMinutes !== undefined && responsePayload.extraTimeMinutes !== extraTimeMinutes) {
             setExtraTimeMinutes(responsePayload.extraTimeMinutes);
         }
     });
 
     const handleAnswerChange = (questionId, value) => {
-        if (!isTimeUp && !isBanned) setAnswers(prev => ({ ...prev, [questionId]: value }));
+        if (!isTimeUp && !isBanned) {
+            setAnswers(prev => {
+                const newAnswers = { ...prev, [questionId]: value };
+                localStorage.setItem(`draft_${roundId}`, JSON.stringify(newAnswers));
+                return newAnswers;
+            });
+        }
     };
 
     // --- OTP Input Logic ---
@@ -530,7 +580,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                             <Terminal size={14} className="text-indigo-400" />
                             <span>
                                 {q?.type === 'MCQ' ? 'Selection_Matrix.exe' :
-                                    (q?.type === 'CODE' || q?.type === 'DEBUG' || roundInfo?.type === 'HTML_CSS_QUIZ' || roundInfo?.type === 'HTML_CSS_DEBUG') ?
+                                    (q?.type === 'CODE' || q?.type === 'DEBUG' || q?.type === 'MISSING_BLOCK' || roundInfo?.type === 'HTML_CSS_QUIZ' || roundInfo?.type === 'HTML_CSS_DEBUG') ?
                                         `solution.${(q?.category === 'SQL' || roundInfo?.type === 'SQL_CONTEST') ? 'sql' :
                                             (q?.category === 'HTML' || roundInfo?.type === 'HTML_CSS_QUIZ' || roundInfo?.type === 'HTML_CSS_DEBUG') ? 'html' :
                                                 q?.category === 'CSS' ? 'css' : language}` :
@@ -672,7 +722,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                                     </div>
                                 </div>
                             </div>
-                        ) : (q?.type === 'CODE' || q?.type === 'DEBUG' || roundInfo?.type === 'HTML_CSS_QUIZ' || roundInfo?.type === 'HTML_CSS_DEBUG') ? (
+                        ) : (q?.type === 'CODE' || q?.type === 'DEBUG' || q?.type === 'MISSING_BLOCK' || roundInfo?.type === 'HTML_CSS_QUIZ' || roundInfo?.type === 'HTML_CSS_DEBUG') ? (
                             !q ? (
                                 <div className="flex flex-col p-8 h-full w-full gap-6 animate-pulse bg-white">
                                     <div className="h-8 bg-slate-200 rounded-md w-1/3"></div>
@@ -697,7 +747,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                                                 height="100%"
                                                 language={(q?.category === 'HTML' || roundInfo?.type === 'HTML_CSS_QUIZ' || roundInfo?.type === 'HTML_CSS_DEBUG' || roundInfo?.type === 'MINI_HACKATHON') ? 'html' : 'css'}
                                                 theme="light"
-                                                value={currentAnswer || (q?.type === 'DEBUG' ? q?.sampleInput : '')}
+                                                value={currentAnswer || (q?.type === 'DEBUG' || q?.type === 'MISSING_BLOCK' ? q?.sampleInput : '')}
                                                 onChange={(val) => handleAnswerChange(q?._id, val)}
                                                 options={{
                                                     minimap: { enabled: false },
@@ -736,7 +786,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                                                 q?.category === 'CSS' ? 'css' :
                                                     'javascript'}
                                         theme="light" // Switched to Monaco's built-in light theme
-                                        value={currentAnswer || (q?.type === 'DEBUG' ? q?.sampleInput : '')}
+                                        value={currentAnswer || (q?.type === 'DEBUG' || q?.type === 'MISSING_BLOCK' ? q?.sampleInput : '')}
                                         onChange={(val) => handleAnswerChange(q?._id, val)}
                                         options={{
                                             minimap: { enabled: false },
