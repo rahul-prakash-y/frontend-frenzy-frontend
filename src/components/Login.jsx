@@ -65,12 +65,37 @@ const Login = () => {
             const data = response.data;
 
             login(data.token, data.user);
+
+            // Decode the JWT token to find if a server is allocated
+            let allocatedServer = null;
+            try {
+                if (data.token) {
+                    const base64Url = data.token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const decoded = JSON.parse(jsonPayload);
+                    allocatedServer = decoded?.allocatedServer;
+                }
+            } catch (e) {
+                console.error("Failed to decode token", e);
+            }
+
             if (data.user.role === 'SUPER_ADMIN') {
                 navigate('/superadmin', { replace: true });
             } else if (data.user.role === 'ADMIN') {
                 navigate('/admin', { replace: true });
             } else {
-                navigate('/dashboard', { replace: true });
+                if (allocatedServer) {
+                    // Redirect to the allocated server URL. Assuming the query parameters are handled or it's just a direct URL replacement.
+                    // The token is already stored in local storage, but since it's a cross-domain redirect,
+                    // we might need to pass it in the URL if the external server needs it.
+                    // However, the user simply requested: "redirects them to that exact server instance (window.location.replace)".
+                    window.location.replace(allocatedServer);
+                } else {
+                    navigate('/dashboard', { replace: true });
+                }
             }
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed.');
