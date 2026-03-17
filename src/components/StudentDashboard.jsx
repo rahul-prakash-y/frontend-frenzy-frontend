@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -188,6 +188,22 @@ const StudentDashboard = () => {
         setSelectedRound(null);
     };
 
+    const handleDownloadCertificate = async (e, round) => {
+        e.stopPropagation();
+        try {
+            const response = await api.get(`/rounds/${round._id}/certificate`, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${round.name.replace(/\s+/g, '_')}_Certificate.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error('Failed to download certificate:', error);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-hidden">
 
@@ -338,6 +354,16 @@ const StudentDashboard = () => {
                                                     </div>
                                                 )}
                                             </div>
+
+                                            {round.hasCertificate && (
+                                                <button
+                                                    onClick={(e) => handleDownloadCertificate(e, round)}
+                                                    className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-linear-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 group/btn"
+                                                >
+                                                    <FileDown size={14} className="group-hover/btn:-translate-y-0.5 transition-transform" />
+                                                    Download Certificate
+                                                </button>
+                                            )}
                                         </div>
 
                                         {/* Interactive Footer */}
