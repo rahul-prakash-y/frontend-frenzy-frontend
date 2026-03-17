@@ -175,7 +175,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                         setIsSubmittedBlock(true);
                     } else {
                         setIsBanned(true);
-                        setBanReason(err.response?.data?.reason || "Disqualified (Platform Security)");
+                        setBanReason(err.response?.data?.reason || err.response?.data?.error || "Disqualified (Platform Security)");
                     }
                 }
             } finally {
