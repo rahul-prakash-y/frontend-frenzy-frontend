@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -188,19 +188,21 @@ const StudentDashboard = () => {
         setSelectedRound(null);
     };
 
-    const handleDownloadCertificate = async (e, round) => {
-        e.stopPropagation();
+    const handleDownloadCertificate = async (roundId, roundName) => {
         try {
-            const response = await api.get(`/rounds/${round._id}/certificate`, { responseType: 'blob' });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const res = await api.get(`/rounds/${roundId}/certificate`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `${round.name.replace(/\s+/g, '_')}_Certificate.pdf`);
+            link.setAttribute('download', `${roundName.replace(/\s+/g, '_')}_certificate.pdf`);
             document.body.appendChild(link);
             link.click();
             link.remove();
-        } catch (error) {
-            console.error('Failed to download certificate:', error);
+        } catch (e) {
+            console.error('Failed to download certificate:', e);
+            alert('Failed to download certificate. Please contact administrator.');
         }
     };
 
@@ -288,7 +290,7 @@ const StudentDashboard = () => {
                                 const eligibility = round.eligibility || { eligible: true };
                                 const isEligible = eligibility.eligible !== false;
 
-                                const config = isEligible ? statusConfig[round.status] : {
+                                let config = isEligible ? statusConfig[round.status] : {
                                     icon: ShieldAlert,
                                     label: 'RESTRICTED',
                                     bg: 'bg-red-50',
@@ -296,6 +298,13 @@ const StudentDashboard = () => {
                                     color: 'text-red-500',
                                     badge: 'border-red-200 bg-red-50 text-red-600'
                                 };
+
+                                if (isEligible && (round.mySubmissionStatus === 'SUBMITTED' || round.mySubmissionStatus === 'COMPLETED')) {
+                                    config = {
+                                        ...statusConfig['COMPLETED'],
+                                        label: round.mySubmissionStatus === 'SUBMITTED' ? 'Response Locked' : 'Mission Accomplished'
+                                    };
+                                }
 
                                 const Icon = config.icon;
                                 const isInteractable = (round.status === 'WAITING_FOR_OTP' || round.status === 'RUNNING') && isEligible;
@@ -354,29 +363,34 @@ const StudentDashboard = () => {
                                                     </div>
                                                 )}
                                             </div>
-
-                                            {round.hasCertificate && (
-                                                <button
-                                                    onClick={(e) => handleDownloadCertificate(e, round)}
-                                                    className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-linear-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 group/btn"
-                                                >
-                                                    <FileDown size={14} className="group-hover/btn:-translate-y-0.5 transition-transform" />
-                                                    Download Certificate
-                                                </button>
-                                            )}
                                         </div>
 
                                         {/* Interactive Footer */}
                                         <div className={`mt-8 pt-4 border-t transition-colors flex items-center justify-between
                                             ${isLive ? 'border-emerald-100/50' : 'border-slate-100'}
                                         `}>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                {!isEligible ? 'Access Locked' :
-                                                    round.status === 'LOCKED' ? 'Access Restricted' :
-                                                        round.status === 'COMPLETED' ? 'Data Sealed' :
-                                                            round.status === 'WAITING_FOR_OTP' ? 'Requires Auth Key' :
-                                                                'Session Ready'}
-                                            </p>
+                                            {round.hasCertificate ? (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDownloadCertificate(round._id, round.name);
+                                                    }}
+                                                    className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-xl text-[10px] font-black transition-all active:scale-95"
+                                                >
+                                                    <Award size={12} />
+                                                    DOWNLOAD CERTIFICATE
+                                                </button>
+                                            ) : (
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                    {!isEligible ? 'Access Locked' :
+                                                        round.mySubmissionStatus === 'COMPLETED' ? 'Evaluation Complete' :
+                                                            round.mySubmissionStatus === 'SUBMITTED' ? 'Awaiting Evaluation' :
+                                                                round.status === 'LOCKED' ? 'Access Restricted' :
+                                                                    round.status === 'COMPLETED' ? 'Data Sealed' :
+                                                                        round.status === 'WAITING_FOR_OTP' ? 'Requires Auth Key' :
+                                                                            'Session Ready'}
+                                                </p>
+                                            )}
 
                                             {isInteractable && (
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isLive ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white'}`}>
