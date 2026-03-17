@@ -124,6 +124,7 @@ export const useAuthStore = create((set, get) => ({
 
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('allocatedServer');
         // Clear sticky session so the next login gets a fresh random assignment.
         // This prevents a dead backend from haunting a student across events.
         clearStickySession();

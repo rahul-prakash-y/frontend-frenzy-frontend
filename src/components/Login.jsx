@@ -88,14 +88,11 @@ const Login = () => {
                 navigate('/admin', { replace: true });
             } else {
                 if (allocatedServer) {
-                    // Redirect to the allocated server URL. Assuming the query parameters are handled or it's just a direct URL replacement.
-                    // The token is already stored in local storage, but since it's a cross-domain redirect,
-                    // we might need to pass it in the URL if the external server needs it.
-                    // However, the user simply requested: "redirects them to that exact server instance (window.location.replace)".
-                    window.location.replace(allocatedServer);
+                    localStorage.setItem('allocatedServer', allocatedServer);
                 } else {
-                    navigate('/dashboard', { replace: true });
+                    localStorage.removeItem('allocatedServer');
                 }
+                navigate('/dashboard', { replace: true });
             }
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed.');

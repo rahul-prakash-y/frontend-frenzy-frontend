@@ -22,7 +22,7 @@ const BACKEND_POOL = [
     import.meta.env.VITE_API_URL_4,
 ].filter(Boolean); // Silently drops any undefined vars (e.g. during local dev)
 
-const DEV_URL = import.meta.env.VITE_DEV_API_URL || 'http://localhost:5000/api';
+const DEV_URL = import.meta.env.VITE_DEV_API_URL || 'http://localhost:5000';
 const IS_DEV = import.meta.env.VITE_FRONTEND_MODE === 'development';
 
 // ─── 2.  Production env-var guard ──────────────────────────────────────────────
@@ -65,6 +65,17 @@ const STICKY_SESSION_KEY = 'ff_sticky_backend';
  * any in-memory caches (leaderboard data, session state) coherent.
  */
 export function getBaseUrl() {
+    // ── Check for allocated server override first ─────────────────────────
+    let allocatedServer = localStorage.getItem('allocatedServer');
+    if (allocatedServer) {
+        // Strip trailing slash and '/api' because authStore interceptor appends '/api'
+        allocatedServer = allocatedServer.replace(/\/+$/, "");
+        if (allocatedServer.endsWith('/api')) {
+            allocatedServer = allocatedServer.slice(0, -4);
+        }
+        return allocatedServer;
+    }
+
     // ── Dev shortcut ────────────────────────────────────────────────────────────
     if (IS_DEV) return DEV_URL;
 
