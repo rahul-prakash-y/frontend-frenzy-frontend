@@ -261,6 +261,12 @@ const StudentDashboard = () => {
                         </h1>
                         <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">
                             Student: <span className="font-mono font-bold text-slate-700">{user?.name || 'Unknown'}</span> ({user?.studentId})
+                            {user?.team?.name && (
+                                <>
+                                    <span className="mx-1 text-slate-300">|</span>
+                                    Team: <span className="text-indigo-600 font-bold">{user.team.name}</span>
+                                </>
+                            )}
                         </p>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
@@ -391,19 +397,19 @@ const StudentDashboard = () => {
                                                     </div>
                                                 ) : (
                                                     <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                                                        <Clock size={14} className="text-slate-400" />
-                                                        {round.testDurationMinutes || round.durationMinutes} Minutes Limit
-                                                        {round.totalSections > 1 && (
-                                                            <>
-                                                                <span className="text-slate-300">|</span>
-                                                                <span className="text-[10px] uppercase font-black tracking-widest text-indigo-500 bg-indigo-50 px-2 rounded-md">
-                                                                    {round.totalSections} Sections
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                    {(() => {
+                                                        <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                                                            <Clock size={14} className="text-slate-400" />
+                                                            {round.testDurationMinutes || round.durationMinutes} Minutes Limit
+                                                            {round.totalSections > 1 && (
+                                                                <>
+                                                                    <span className="text-slate-300">|</span>
+                                                                    <span className="text-[10px] uppercase font-black tracking-widest text-indigo-500 bg-indigo-50 px-2 rounded-md">
+                                                                        {round.totalSections} Sections
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        {(() => {
                                                             const windowStatus = getTimeWindowStatus(round);
                                                             if (!windowStatus) return null;
                                                             return (
