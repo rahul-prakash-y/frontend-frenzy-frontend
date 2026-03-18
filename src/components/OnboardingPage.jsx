@@ -4,6 +4,17 @@ import { User, ArrowRight, Loader2, Rocket, ShieldCheck, Linkedin, Github, Phone
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
+const formatDate = (date) => {
+  if (!date) return '';
+
+  const d = new Date(date);
+
+  // extra safety (important)
+  if (isNaN(d.getTime())) return '';
+
+  return d.toISOString().split('T')[0];
+};
+
 const OnboardingPage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -33,7 +44,7 @@ const OnboardingPage = () => {
             setLinkedinProfile(user.linkedinProfile || '');
             setGithubProfile(user.githubProfile || '');
             setPhone(user.phone || '');
-            setDob(user.dob || '');
+            setDob(formatDate(user.dob) || '');
             setBio(user.bio || '');
             setDepartment(user.department || '');
             setGender(user.gender || '');
