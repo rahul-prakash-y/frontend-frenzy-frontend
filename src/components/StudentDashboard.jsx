@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle, Trophy } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -312,6 +312,14 @@ const StudentDashboard = () => {
                         >
                             <Clock size={14} />
                             <span className="hidden sm:inline">History</span>
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/achievements')}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-600 hover:text-white transition-all active:scale-95 shadow-sm"
+                        >
+                            <Trophy size={14} />
+                            <span className="hidden sm:inline">Achievements</span>
                         </button>
 
                         <div className="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">

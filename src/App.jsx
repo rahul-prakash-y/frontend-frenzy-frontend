@@ -18,6 +18,7 @@ import BlockedAccount from './pages/BlockedAccount';
 import OnboardingPage from './components/OnboardingPage';
 import ProfilePage from './components/ProfilePage';
 import AttendanceHistoryPage from './components/AttendanceHistoryPage';
+import AchievementsPage from './components/AchievementsPage';
 
 import { useAuthStore } from './store/authStore';
 
@@ -106,6 +107,16 @@ const AppRoutes = () => {
                 element={
                     <ProtectedRoute>
                         <AttendanceHistoryPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Student Achievements */}
+            <Route
+                path="/achievements"
+                element={
+                    <ProtectedRoute>
+                        <AchievementsPage />
                     </ProtectedRoute>
                 }
             />
