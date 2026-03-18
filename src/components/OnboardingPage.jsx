@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, ArrowRight, Loader2, Rocket, ShieldCheck, Linkedin, Github, Phone, FileText, Lock, CheckCircle2, Calendar, Mail, Building, Users, Home } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -19,8 +19,27 @@ const OnboardingPage = () => {
     const [accommodation, setAccommodation] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const { onboard, user } = useAuthStore();
+    const { onboard, user, fetchProfile } = useAuthStore();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
+
+    useEffect(() => {
+        if (user) {
+            setName(user.name || '');
+            setEmail(user.email || '');
+            setLinkedinProfile(user.linkedinProfile || '');
+            setGithubProfile(user.githubProfile || '');
+            setPhone(user.phone || '');
+            setDob(user.dob || '');
+            setBio(user.bio || '');
+            setDepartment(user.department || '');
+            setGender(user.gender || '');
+            setAccommodation(user.accommodation || '');
+        }
+    }, [user]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
