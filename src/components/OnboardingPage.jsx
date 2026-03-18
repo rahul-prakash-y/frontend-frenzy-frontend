@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, ArrowRight, Loader2, Rocket, ShieldCheck, Linkedin, Github, Phone, FileText, Lock, CheckCircle2, Calendar, Mail, Building, Users, Home } from 'lucide-react';
+import { User, ArrowRight, Loader2, Rocket, ShieldCheck, Phone, FileText, Lock, CheckCircle2, Calendar, Mail, Building, Users, Home } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+import { DEPARTMENTS } from '../config/constants';
 
 const formatDate = (date) => {
-  if (!date) return '';
+    if (!date) return '';
 
-  const d = new Date(date);
+    const d = new Date(date);
 
-  // extra safety (important)
-  if (isNaN(d.getTime())) return '';
+    if (isNaN(d.getTime())) return '';
 
-  return d.toISOString().split('T')[0];
+    return d.toISOString().split('T')[0];
 };
+
 
 const OnboardingPage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [linkedinProfile, setLinkedinProfile] = useState('');
-    const [githubProfile, setGithubProfile] = useState('');
     const [phone, setPhone] = useState('');
     const [dob, setDob] = useState('');
     const [bio, setBio] = useState('');
@@ -41,8 +40,6 @@ const OnboardingPage = () => {
         if (user) {
             setName(user.name || '');
             setEmail(user.email || '');
-            setLinkedinProfile(user.linkedinProfile || '');
-            setGithubProfile(user.githubProfile || '');
             setPhone(user.phone || '');
             setDob(formatDate(user.dob) || '');
             setBio(user.bio || '');
@@ -71,7 +68,7 @@ const OnboardingPage = () => {
 
         setLoading(true);
         setError('');
-        const res = await onboard(name, email, linkedinProfile, githubProfile, phone, bio, dob, password, department, gender, accommodation);
+        const res = await onboard(name, email, phone, bio, dob, password, department, gender, accommodation);
         setLoading(false);
 
         if (res.success) {
@@ -149,41 +146,6 @@ const OnboardingPage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="relative group">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">
-                                    LinkedIn
-                                </label>
-                                <div className="relative">
-                                    <Linkedin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-violet-400 transition-colors" size={20} />
-                                    <input
-                                        type="url"
-                                        value={linkedinProfile}
-                                        onChange={(e) => setLinkedinProfile(e.target.value)}
-                                        placeholder="linkedin.com/in/..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="relative group">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">
-                                    GitHub
-                                </label>
-                                <div className="relative">
-                                    <Github className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-violet-400 transition-colors" size={20} />
-                                    <input
-                                        type="url"
-                                        value={githubProfile}
-                                        onChange={(e) => setGithubProfile(e.target.value)}
-                                        placeholder="github.com/..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="relative group">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">
                                     Phone Number
                                 </label>
                                 <div className="relative">
@@ -222,14 +184,17 @@ const OnboardingPage = () => {
                             </label>
                             <div className="relative">
                                 <Building className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-violet-400 transition-colors" size={20} />
-                                <input
-                                    type="text"
+                                <select
                                     value={department}
                                     onChange={(e) => setDepartment(e.target.value)}
-                                    placeholder="Enter your department..."
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all text-base font-medium appearance-none"
                                     required
-                                />
+                                >
+                                    <option value="" disabled>Select Department</option>
+                                    {DEPARTMENTS.map((dept) => (
+                                        <option key={dept} value={dept}>{dept}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 

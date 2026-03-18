@@ -3,10 +3,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     Plus, Loader2, AlertTriangle, X, Check, Eye, Mail, Phone, FileText,
     Users, UserX, UserCheck, KeyRound, LogIn, Trash2, Search, Upload,
-    Linkedin, Github, Calendar, Download
+    Calendar, Download
 } from 'lucide-react';
 import { api } from '../../store/authStore';
 import { API } from './constants';
+import { DEPARTMENTS } from '../../config/constants';
 import Pagination from './components/Pagination';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../store/confirmStore';
@@ -149,13 +150,16 @@ const AddStudentModal = ({ onClose, onCreated }) => {
                             <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">
                                 Department
                             </label>
-                            <input
-                                type="text"
+                            <select
                                 value={department}
                                 onChange={e => setDepartment(e.target.value)}
-                                placeholder="e.g. CSE"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
-                            />
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none"
+                            >
+                                <option value="">Select Department</option>
+                                {DEPARTMENTS.map(dept => (
+                                    <option key={dept} value={dept}>{dept}</option>
+                                ))}
+                            </select>
                         </div>
 
                         {error && (
@@ -541,63 +545,34 @@ const StudentDetailsModal = ({ student, onClose }) => {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {/* Social Profiles */}
-                            <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Connect</h3>
-                                <div className="space-y-2">
-                                    {student.linkedinProfile && (
-                                        <a href={student.linkedinProfile} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-blue-50/50 border border-blue-100/50 rounded-xl text-blue-700 hover:bg-blue-50 transition-all group">
-                                            <div className="p-1.5 bg-white border border-blue-100 rounded-lg group-hover:scale-110 transition-transform">
-                                                <Linkedin size={14} />
-                                            </div>
-                                            <span className="text-xs font-bold truncate">LinkedIn Profile</span>
-                                        </a>
-                                    )}
-                                    {student.githubProfile && (
-                                        <a href={student.githubProfile} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 hover:bg-slate-100 transition-all group">
-                                            <div className="p-1.5 bg-white border border-slate-200 rounded-lg group-hover:scale-110 transition-transform">
-                                                <Github size={14} />
-                                            </div>
-                                            <span className="text-xs font-bold truncate">GitHub Profile</span>
-                                        </a>
-                                    )}
-                                    {!student.linkedinProfile && !student.githubProfile && (
-                                        <p className="text-xs text-slate-400 italic">No social profiles linked</p>
-                                    )}
+                        <div className="space-y-4">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Details</h3>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700">
+                                    <div className="p-1.5 bg-white border border-slate-200 rounded-lg">
+                                        <Phone size={14} className="text-indigo-400" />
+                                    </div>
+                                    <span className="text-xs font-bold">{student.phone || 'N/A'}</span>
                                 </div>
-                            </div>
-
-                            {/* Contact Info */}
-                            <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Details</h3>
-                                <div className="space-y-2">
+                                {student.dob && (
                                     <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700">
                                         <div className="p-1.5 bg-white border border-slate-200 rounded-lg">
-                                            <Phone size={14} className="text-indigo-400" />
+                                            <Calendar size={14} className="text-indigo-400" />
                                         </div>
-                                        <span className="text-xs font-bold">{student.phone || 'N/A'}</span>
+                                        <span className="text-xs font-bold">
+                                            {new Date(student.dob).toLocaleDateString(undefined, {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </span>
                                     </div>
-                                    {student.dob && (
-                                        <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700">
-                                            <div className="p-1.5 bg-white border border-slate-200 rounded-lg">
-                                                <Calendar size={14} className="text-indigo-400" />
-                                            </div>
-                                            <span className="text-xs font-bold">
-                                                {new Date(student.dob).toLocaleDateString(undefined, {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700">
-                                        <div className="p-1.5 bg-white border border-slate-200 rounded-lg">
-                                            <Mail size={14} className="text-indigo-400" />
-                                        </div>
-                                        <span className="text-xs font-bold">{student.email || 'N/A'}</span>
+                                )}
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-700">
+                                    <div className="p-1.5 bg-white border border-slate-200 rounded-lg">
+                                        <Mail size={14} className="text-indigo-400" />
                                     </div>
+                                    <span className="text-xs font-bold">{student.email || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -874,12 +849,6 @@ const StudentManagerTab = () => {
                                                         </div>
                                                     )}
                                                     <div className="flex items-center gap-1.5 border-l border-slate-100 pl-2 ml-1">
-                                                        {student.linkedinProfile && (
-                                                            <Linkedin size={10} className="text-slate-300 hover:text-blue-500 transition-colors" />
-                                                        )}
-                                                        {student.githubProfile && (
-                                                            <Github size={10} className="text-slate-300 hover:text-slate-600 transition-colors" />
-                                                        )}
                                                         {student.bio && (
                                                             <FileText size={10} className="text-slate-300" title={student.bio} />
                                                         )}

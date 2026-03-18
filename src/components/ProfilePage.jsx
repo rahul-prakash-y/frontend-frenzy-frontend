@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Github, Linkedin, Phone, FileText, Calendar, Building, Users, Home, Loader2, Save, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, FileText, Calendar, Building, Users, Home, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { DEPARTMENTS } from '../config/constants';
 
 const ProfilePage = () => {
     const { user, fetchProfile, updateProfile } = useAuthStore();
@@ -11,8 +12,6 @@ const ProfilePage = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        linkedinProfile: '',
-        githubProfile: '',
         phone: '',
         bio: '',
         dob: '',
@@ -32,8 +31,6 @@ const ProfilePage = () => {
                 setFormData({
                     name: profile.name || '',
                     email: profile.email || '',
-                    linkedinProfile: profile.linkedinProfile || '',
-                    githubProfile: profile.githubProfile || '',
                     phone: profile.phone || '',
                     bio: profile.bio || '',
                     dob: profile.dob ? new Date(profile.dob).toISOString().split('T')[0] : '',
@@ -129,7 +126,18 @@ const ProfilePage = () => {
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Department</label>
                                 <div className="relative">
                                     <Building className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
-                                    <input type="text" name="department" value={formData.department} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all" required />
+                                    <select
+                                        name="department"
+                                        value={formData.department}
+                                        onChange={handleChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all appearance-none"
+                                        required
+                                    >
+                                        <option value="" disabled>Select Department</option>
+                                        {DEPARTMENTS.map((dept) => (
+                                            <option key={dept} value={dept}>{dept}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                             <div className="relative group">
@@ -154,20 +162,6 @@ const ProfilePage = () => {
                                         <option value="Hostel">Hostel</option>
                                         <option value="Dayscholar">Dayscholar</option>
                                     </select>
-                                </div>
-                            </div>
-                            <div className="relative group">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">LinkedIn</label>
-                                <div className="relative">
-                                    <Linkedin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
-                                    <input type="url" name="linkedinProfile" value={formData.linkedinProfile} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all" required />
-                                </div>
-                            </div>
-                            <div className="relative group">
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">GitHub</label>
-                                <div className="relative">
-                                    <Github className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
-                                    <input type="url" name="githubProfile" value={formData.githubProfile} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-6 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all" />
                                 </div>
                             </div>
                         </div>

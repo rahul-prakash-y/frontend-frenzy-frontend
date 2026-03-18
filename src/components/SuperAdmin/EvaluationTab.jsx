@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { Search, Loader2, ChevronDown, ClipboardCheck, ExternalLink, AlertTriangle, Check, ChevronUp, User, BookOpen, Star, CheckCircle2, Phone, Calendar, Linkedin, Github, User as UserIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Search, Loader2, ChevronDown, ClipboardCheck, ExternalLink, AlertTriangle, Check, ChevronUp, User, BookOpen, Star, CheckCircle2, Phone, Calendar, User as UserIcon } from 'lucide-react';
 import { api } from '../../store/authStore';
 import { API } from './constants';
 import Pagination from './components/Pagination';
@@ -333,14 +333,6 @@ const SubmissionEvalCard = ({ submission, onScoreSaved, onTransfer }) => {
                                         <span>{new Date(submission.student.dob).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                     </div>
                                 )}
-                                <div className="flex items-center gap-1.5 ml-1">
-                                    {submission.student?.linkedinProfile && (
-                                        <Linkedin size={10} className="text-slate-300 hover:text-blue-500 transition-colors" />
-                                    )}
-                                    {submission.student?.githubProfile && (
-                                        <Github size={10} className="text-slate-300 hover:text-slate-600 transition-colors" />
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </div>
