@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +37,11 @@ const StudentDashboard = () => {
     const [marking, setMarking] = useState(false);
     const [attendanceStatus, setAttendanceStatus] = useState(null); // 'success', 'error', null
     const [attendanceMessage, setAttendanceMessage] = useState('');
+
+    // Team enrollment request state
+    const [teamRequestStatus, setTeamRequestStatus] = useState(user?.teamRequest?.status || 'NONE');
+    const [teamRequestMsg, setTeamRequestMsg] = useState(user?.teamRequest?.message || '');
+    const [submittingRequest, setSubmittingRequest] = useState(false);
 
     // Guard: recovery logic must only run once per page session.
     const hasFiredRecovery = useRef(false);
@@ -227,6 +232,20 @@ const StudentDashboard = () => {
         setSelectedRound(null);
     };
 
+    const handleTeamRequest = async () => {
+        setSubmittingRequest(true);
+        try {
+            await api.post('/auth/team-request');
+            setTeamRequestStatus('PENDING');
+            setTeamRequestMsg('');
+        } catch (e) {
+            const msg = e.response?.data?.error || 'Failed to submit request. Please try again.';
+            alert(msg);
+        } finally {
+            setSubmittingRequest(false);
+        }
+    };
+
     const handleDownloadCertificate = async (roundId, roundName) => {
         try {
             const res = await api.get(`/rounds/${roundId}/certificate`, {
@@ -303,6 +322,76 @@ const StudentDashboard = () => {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10 space-y-8">
+
+                {/* Team Enrollment Banner — shown only when student has no team */}
+                {!user?.team && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`rounded-2xl border p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4
+                            ${teamRequestStatus === 'PENDING'
+                                ? 'bg-amber-50 border-amber-200'
+                                : teamRequestStatus === 'REJECTED'
+                                    ? 'bg-red-50 border-red-200'
+                                    : 'bg-indigo-50 border-indigo-200'
+                            }
+                        `}
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-xl ${teamRequestStatus === 'PENDING' ? 'bg-amber-100 text-amber-600' :
+                                    teamRequestStatus === 'REJECTED' ? 'bg-red-100 text-red-600' :
+                                        'bg-indigo-100 text-indigo-600'
+                                }`}>
+                                {teamRequestStatus === 'PENDING' ? <Loader2 size={18} className="animate-spin" /> :
+                                    teamRequestStatus === 'REJECTED' ? <XCircle size={18} /> :
+                                        <Users size={18} />}
+                            </div>
+                            <div>
+                                <p className={`font-black text-sm ${teamRequestStatus === 'PENDING' ? 'text-amber-800' :
+                                        teamRequestStatus === 'REJECTED' ? 'text-red-800' :
+                                            'text-indigo-800'
+                                    }`}>
+                                    {teamRequestStatus === 'PENDING'
+                                        ? 'Team Enrollment Request Pending'
+                                        : teamRequestStatus === 'REJECTED'
+                                            ? 'Team Enrollment Request Rejected'
+                                            : 'No Team Assigned'}
+                                </p>
+                                <p className={`text-xs mt-0.5 ${teamRequestStatus === 'PENDING' ? 'text-amber-600' :
+                                        teamRequestStatus === 'REJECTED' ? 'text-red-600' :
+                                            'text-indigo-500'
+                                    }`}>
+                                    {teamRequestStatus === 'PENDING'
+                                        ? 'Your request has been submitted. Awaiting admin review.'
+                                        : teamRequestStatus === 'REJECTED'
+                                            ? (teamRequestMsg || 'Your request was rejected. You may re-submit.')
+                                            : 'You are not assigned to any team. Request the admin to enroll you.'}
+                                </p>
+                            </div>
+                        </div>
+                        {teamRequestStatus === 'NONE' && (
+                            <button
+                                onClick={handleTeamRequest}
+                                disabled={submittingRequest}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-sm disabled:opacity-60 whitespace-nowrap"
+                            >
+                                {submittingRequest ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                                Request Enrollment
+                            </button>
+                        )}
+                        {teamRequestStatus === 'REJECTED' && (
+                            <button
+                                onClick={handleTeamRequest}
+                                disabled={submittingRequest}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-black hover:bg-red-700 transition-all active:scale-95 shadow-sm disabled:opacity-60 whitespace-nowrap"
+                            >
+                                {submittingRequest ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                                Re-submit Request
+                            </button>
+                        )}
+                    </motion.div>
+                )}
+
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
