@@ -306,6 +306,14 @@ const StudentDashboard = () => {
                             <span className="hidden xs:inline sm:inline">Profile</span>
                         </button>
 
+                        <button
+                            onClick={() => navigate('/attendance-history')}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-teal-600 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-600 hover:text-white transition-all active:scale-95 shadow-sm"
+                        >
+                            <Clock size={14} />
+                            <span className="hidden sm:inline">History</span>
+                        </button>
+
                         <div className="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                             <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">System Live</span>
@@ -339,8 +347,8 @@ const StudentDashboard = () => {
                     >
                         <div className="flex items-start gap-3">
                             <div className={`p-2 rounded-xl ${teamRequestStatus === 'PENDING' ? 'bg-amber-100 text-amber-600' :
-                                    teamRequestStatus === 'REJECTED' ? 'bg-red-100 text-red-600' :
-                                        'bg-indigo-100 text-indigo-600'
+                                teamRequestStatus === 'REJECTED' ? 'bg-red-100 text-red-600' :
+                                    'bg-indigo-100 text-indigo-600'
                                 }`}>
                                 {teamRequestStatus === 'PENDING' ? <Loader2 size={18} className="animate-spin" /> :
                                     teamRequestStatus === 'REJECTED' ? <XCircle size={18} /> :
@@ -348,8 +356,8 @@ const StudentDashboard = () => {
                             </div>
                             <div>
                                 <p className={`font-black text-sm ${teamRequestStatus === 'PENDING' ? 'text-amber-800' :
-                                        teamRequestStatus === 'REJECTED' ? 'text-red-800' :
-                                            'text-indigo-800'
+                                    teamRequestStatus === 'REJECTED' ? 'text-red-800' :
+                                        'text-indigo-800'
                                     }`}>
                                     {teamRequestStatus === 'PENDING'
                                         ? 'Team Enrollment Request Pending'
@@ -358,8 +366,8 @@ const StudentDashboard = () => {
                                             : 'No Team Assigned'}
                                 </p>
                                 <p className={`text-xs mt-0.5 ${teamRequestStatus === 'PENDING' ? 'text-amber-600' :
-                                        teamRequestStatus === 'REJECTED' ? 'text-red-600' :
-                                            'text-indigo-500'
+                                    teamRequestStatus === 'REJECTED' ? 'text-red-600' :
+                                        'text-indigo-500'
                                     }`}>
                                     {teamRequestStatus === 'PENDING'
                                         ? 'Your request has been submitted. Awaiting admin review.'

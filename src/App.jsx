@@ -17,6 +17,7 @@ import SuperAdminDashboard from './components/SuperAdminDashboard';
 import BlockedAccount from './pages/BlockedAccount';
 import OnboardingPage from './components/OnboardingPage';
 import ProfilePage from './components/ProfilePage';
+import AttendanceHistoryPage from './components/AttendanceHistoryPage';
 
 import { useAuthStore } from './store/authStore';
 
@@ -95,6 +96,16 @@ const AppRoutes = () => {
                 element={
                     <ProtectedRoute>
                         <ProfilePage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Student Attendance History */}
+            <Route
+                path="/attendance-history"
+                element={
+                    <ProtectedRoute>
+                        <AttendanceHistoryPage />
                     </ProtectedRoute>
                 }
             />
