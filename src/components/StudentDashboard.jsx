@@ -98,6 +98,32 @@ const StudentDashboard = () => {
     // Team enrollment request state
     const [teamRequestStatus, setTeamRequestStatus] = useState(user?.teamRequest?.status || 'NONE');
     const [teamRequestMsg, setTeamRequestMsg] = useState(user?.teamRequest?.message || '');
+
+    // High-end animation variants for staggered entry
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, scale: 0.95, y: 30 },
+        visible: { 
+            opacity: 1, 
+            scale: 1, 
+            y: 0,
+            transition: {
+                type: "spring",
+                damping: 20,
+                stiffness: 100
+            }
+        }
+    };
     const [submittingRequest, setSubmittingRequest] = useState(false);
 
     // Toast State
@@ -312,17 +338,19 @@ const StudentDashboard = () => {
         } catch (e) {
             const msg = e.response?.data?.error || 'Failed to submit request. Please try again.';
             showToast(msg, 'error');
-        } finally {
-            setSubmittingRequest(false);
         }
     };
 
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative flex overflow-hidden">
+        <div className="flex h-screen bg-slate-50/50 overflow-hidden font-sans relative">
+            {/* Ambient background glows for a premium feel */}
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-500/5 rounded-full blur-[150px] pointer-events-none" />
 
-            {/* Floating Sidebar */}
-            <aside className="fixed left-0 top-0 h-full w-20 flex flex-col items-center py-8 bg-white/40 backdrop-blur-xl border-r border-slate-200/60 z-50">
+            {/* Sidebar Navigation */}
+            <aside className="w-20 bg-white/70 backdrop-blur-2xl border-r border-slate-200/50 flex flex-col items-center py-8 justify-between shrink-0 z-50">
                 <div className="mb-12">
                     <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 mb-2">
                         <Sparkles size={20} className="text-white" />
@@ -373,20 +401,20 @@ const StudentDashboard = () => {
                 </div>
             </aside>
 
-            <div className="flex-1 flex flex-col min-w-0 ml-20 h-screen overflow-y-auto">
-
-            {/* Ambient Background Glows for "Arena" feel */}
-            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Glassmorphism Header */}
-            <header className="bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-40 shadow-sm transition-all">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                            Code Circle Club <span className="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md text-sm border border-indigo-100">Fint & Friends</span>
-                        </h1>
-                        <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">
+            <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+                {/* Header Section */}
+                <header className="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-8 shrink-0 shadow-sm relative z-40">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-linear-to-tr from-indigo-600 to-violet-600 rounded-2xl shadow-lg shadow-indigo-200 group transition-transform hover:rotate-3 cursor-pointer">
+                            <Sparkles className="text-white group-hover:scale-110 transition-transform" size={20} />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">CodeCircle <span className="text-indigo-600">Arena</span></h1>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Terminal Protocol Active</span>
+                            </div>
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">
                             Student: <span className="font-mono font-bold text-slate-700">{user?.name || 'Unknown'}</span> ({user?.studentId})
                             {user?.team?.name && (
                                 <>
@@ -395,6 +423,7 @@ const StudentDashboard = () => {
                                 </>
                             )}
                         </p>
+                        </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">
@@ -402,8 +431,7 @@ const StudentDashboard = () => {
                             <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">System Live</span>
                         </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10 space-y-8">
 
@@ -502,9 +530,14 @@ const StudentDashboard = () => {
                         <p className="text-sm text-slate-400 mt-2">Stand by for administrator deployment.</p>
                     </motion.div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <AnimatePresence>
-                            {displayRounds.map((round, index) => {
+                    <motion.div 
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    >
+                        <AnimatePresence mode="popLayout">
+                            {displayRounds.map((round) => {
                                 const eligibility = round.eligibility || { eligible: true };
                                 const isEligible = eligibility.eligible !== false;
 
@@ -535,20 +568,25 @@ const StudentDashboard = () => {
                                      <motion.div
                                          key={round._id}
                                          layout
-                                         initial={{ opacity: 0, y: 20 }}
-                                         animate={{ opacity: 1, y: 0 }}
-                                         transition={{ delay: index * 0.05, ease: "easeOut" }}
-                                         whileHover={isInteractable ? { y: -6, scale: 1.02 } : {}}
+                                         variants={itemVariants}
+                                         whileHover={isInteractable ? { 
+                                             scale: 1.03, 
+                                             translateY: -8,
+                                             transition: { duration: 0.3, ease: "easeOut" }
+                                         } : {}}
                                          whileTap={isInteractable ? { scale: 0.98 } : {}}
                                          onClick={() => handleRoundClick(round)}
-                                         className={`group relative overflow-hidden rounded-3xl p-6 transition-all duration-300 
-                                             ${isInteractable ? 'cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-indigo-500/10 bg-white border border-slate-200' : 'shadow-sm'}
-                                             ${isLive ? 'border-2 border-emerald-400/50 bg-white ring-4 ring-emerald-50' : ''}
-                                             ${isFinished ? 'bg-indigo-50/40 border border-indigo-200/50 opacity-95 grayscale-0' : (!isInteractable && !isLive ? 'bg-white border border-slate-100 opacity-70 cursor-not-allowed grayscale-[0.4]' : '')}
+                                         className={`group relative overflow-hidden rounded-4xl p-8 transition-all duration-500 
+                                             ${isInteractable ? 'cursor-pointer shadow-xl shadow-indigo-500/5 hover:shadow-2xl hover:shadow-indigo-500/10 bg-white/70 backdrop-blur-md border border-white/40' : 'shadow-sm'}
+                                             ${isLive ? 'border-2 border-emerald-400/50 bg-white/80 ring-8 ring-emerald-50/50' : ''}
+                                             ${isFinished ? 'bg-indigo-50/50 backdrop-blur-sm border border-indigo-200/40 opacity-95' : (!isInteractable && !isLive ? 'bg-white/40 border border-slate-100/50 opacity-60 cursor-not-allowed grayscale' : '')}
                                          `}
                                      >
+                                        {/* Dynamic accent glow for active/hovered rounds */}
+                                        <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${isLive ? 'bg-emerald-400' : 'bg-indigo-400'}`} />
+                                        
                                         {/* Subtle internal gradient for live rounds */}
-                                        {isLive && <div className="absolute inset-0 bg-linear-to-br from-emerald-50/50 to-transparent pointer-events-none" />}
+                                        {isLive && <div className="absolute inset-0 bg-linear-to-br from-emerald-50/40 to-transparent pointer-events-none animate-pulse" />}
 
                                         <div className="relative z-10">
                                             <div className="flex justify-between items-start mb-8">
@@ -624,7 +662,7 @@ const StudentDashboard = () => {
                                 );
                             })}
                         </AnimatePresence>
-                    </div>
+                    </motion.div>
                 )}
             </main>
             </div>
