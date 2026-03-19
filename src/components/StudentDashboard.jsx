@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle, Trophy } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle, Trophy, BarChart3 } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -388,6 +388,12 @@ const StudentDashboard = () => {
                         label="Achievements"
                         variant="amber"
                         onClick={() => navigate('/achievements')}
+                    />
+                    <SidebarItem
+                        icon={BarChart3}
+                        label="Performance"
+                        variant="violet"
+                        onClick={() => navigate('/performance-report')}
                     />
                 </div>
 

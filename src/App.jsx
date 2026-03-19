@@ -19,6 +19,7 @@ import OnboardingPage from './components/OnboardingPage';
 import ProfilePage from './components/ProfilePage';
 import AttendanceHistoryPage from './components/AttendanceHistoryPage';
 import AchievementsPage from './components/AchievementsPage';
+import PerformanceReport from './components/PerformanceReport';
 
 import { useAuthStore } from './store/authStore';
 
@@ -123,6 +124,15 @@ const AppRoutes = () => {
 
             {/* 404 Fallback Catch */}
             <Route path="*" element={<RoleFallback />} />
+            {/* Student Performance Reports */}
+            <Route
+                path="/performance-report"
+                element={
+                    <ProtectedRoute>
+                        <PerformanceReport />
+                    </ProtectedRoute>
+                }
+            />
         </Routes>
     );
 };
