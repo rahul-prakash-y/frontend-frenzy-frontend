@@ -25,6 +25,63 @@ const statusConfig = {
     }
 };
 
+const SidebarItem = ({ icon: Icon, onClick, label, variant = "indigo", isActive = false }) => {
+    const variants = {
+        indigo: "text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-200",
+        violet: "text-violet-600 border-violet-100 hover:bg-violet-600 hover:text-white hover:shadow-violet-200",
+        teal: "text-teal-600 border-teal-100 hover:bg-teal-600 hover:text-white hover:shadow-teal-200",
+        amber: "text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white hover:shadow-amber-200",
+        red: "text-red-500 border-slate-200 hover:bg-red-600 hover:text-white hover:shadow-red-200",
+        slate: "text-slate-400 border-transparent hover:bg-slate-100 hover:text-slate-600"
+    };
+
+    return (
+        <div className="relative group flex items-center justify-center">
+            <button
+                onClick={onClick}
+                className={`p-3 rounded-2xl transition-all duration-300 flex items-center justify-center border-2 active:scale-90
+                    ${isActive ? 'bg-white shadow-lg ' + variants[variant] : 'bg-transparent border-transparent ' + variants[variant]}
+                `}
+            >
+                <Icon size={20} className="transition-transform group-hover:scale-110" />
+            </button>
+            <div className="absolute left-full ml-4 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-xl z-50">
+                {label}
+                <div className="absolute left-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+            </div>
+        </div>
+    );
+};
+
+const Toast = ({ message, type = 'info', onClose }) => {
+    const icons = {
+        success: <CheckCircle className="text-emerald-500" size={18} />,
+        error: <AlertTriangle className="text-red-500" size={18} />,
+        info: <Sparkles className="text-indigo-500" size={18} />,
+        warning: <AlertTriangle className="text-amber-500" size={18} />
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-5 py-3.5 bg-white/90 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-2xl min-w-[320px] max-w-md"
+        >
+            <div className="shrink-0">{icons[type]}</div>
+            <p className="flex-1 text-xs font-black text-slate-700 tracking-tight leading-tight mr-4 whitespace-pre-line">
+                {message}
+            </p>
+            <button
+                onClick={onClose}
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+            >
+                <XCircle size={16} />
+            </button>
+        </motion.div>
+    );
+};
+
 const StudentDashboard = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
@@ -42,6 +99,14 @@ const StudentDashboard = () => {
     const [teamRequestStatus, setTeamRequestStatus] = useState(user?.teamRequest?.status || 'NONE');
     const [teamRequestMsg, setTeamRequestMsg] = useState(user?.teamRequest?.message || '');
     const [submittingRequest, setSubmittingRequest] = useState(false);
+
+    // Toast State
+    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+
+    const showToast = useCallback((message, type = 'info') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast(p => ({ ...p, show: false })), 4000);
+    }, []);
 
     // Guard: recovery logic must only run once per page session.
     const hasFiredRecovery = useRef(false);
@@ -208,11 +273,16 @@ const StudentDashboard = () => {
     const handleRoundClick = (round) => {
         const windowStatus = getTimeWindowStatus(round);
         if (windowStatus?.type === 'WAITING') {
-            alert(`This assessment is scheduled to start at ${new Date(round.startTime).toLocaleString()}.`);
+            showToast(`Assessment starts at ${new Date(round.startTime).toLocaleString()}.`, 'info');
             return;
         }
         if (windowStatus?.type === 'CLOSED' && round.mySubmissionStatus !== 'IN_PROGRESS') {
-            alert('The testing window for this assessment has closed.');
+            showToast('The testing window for this assessment has closed.', 'warning');
+            return;
+        }
+
+        if (round.mySubmissionStatus === 'SUBMITTED' || round.mySubmissionStatus === 'COMPLETED') {
+            showToast('Session complete. Assessment data is sealed.', 'info');
             return;
         }
 
@@ -238,34 +308,72 @@ const StudentDashboard = () => {
             await api.post('/auth/team-request');
             setTeamRequestStatus('PENDING');
             setTeamRequestMsg('');
+            showToast('Team enrollment request submitted successfully.', 'success');
         } catch (e) {
             const msg = e.response?.data?.error || 'Failed to submit request. Please try again.';
-            alert(msg);
+            showToast(msg, 'error');
         } finally {
             setSubmittingRequest(false);
         }
     };
 
-    const handleDownloadCertificate = async (roundId, roundName) => {
-        try {
-            const res = await api.get(`/rounds/${roundId}/certificate`, {
-                responseType: 'blob'
-            });
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `${roundName.replace(/\s+/g, '_')}_certificate.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (e) {
-            console.error('Failed to download certificate:', e);
-            alert('Failed to download certificate. Please contact administrator.');
-        }
-    };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-hidden">
+        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative flex overflow-hidden">
+
+            {/* Floating Sidebar */}
+            <aside className="fixed left-0 top-0 h-full w-20 flex flex-col items-center py-8 bg-white/40 backdrop-blur-xl border-r border-slate-200/60 z-50">
+                <div className="mb-12">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 mb-2">
+                        <Sparkles size={20} className="text-white" />
+                    </div>
+                </div>
+
+                <div className="flex-1 flex flex-col gap-6">
+                    <SidebarItem
+                        icon={Play}
+                        label="Dashboard"
+                        variant="indigo"
+                        isActive={true}
+                        onClick={() => navigate('/dashboard')}
+                    />
+                    <SidebarItem
+                        icon={UserCheck}
+                        label="Mark Attendance"
+                        variant="indigo"
+                        onClick={() => setIsAttendanceOpen(true)}
+                    />
+                    <SidebarItem
+                        icon={User}
+                        label="Profile"
+                        variant="violet"
+                        onClick={() => navigate('/profile')}
+                    />
+                    <SidebarItem
+                        icon={Clock}
+                        label="History"
+                        variant="teal"
+                        onClick={() => navigate('/attendance-history')}
+                    />
+                    <SidebarItem
+                        icon={Trophy}
+                        label="Achievements"
+                        variant="amber"
+                        onClick={() => navigate('/achievements')}
+                    />
+                </div>
+
+                <div className="mt-auto">
+                    <SidebarItem
+                        icon={Power}
+                        label="Disconnect"
+                        variant="red"
+                        onClick={logout}
+                    />
+                </div>
+            </aside>
+
+            <div className="flex-1 flex flex-col min-w-0 ml-20 h-screen overflow-y-auto">
 
             {/* Ambient Background Glows for "Arena" feel */}
             <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -288,51 +396,11 @@ const StudentDashboard = () => {
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        {/* Standalone Attendance Button */}
-                        <button
-                            onClick={() => setIsAttendanceOpen(true)}
-                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 shadow-sm"
-                        >
-                            <UserCheck size={14} />
-                            Mark Attendance
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/profile')}
-                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 rounded-xl hover:bg-violet-600 hover:text-white transition-all active:scale-95 shadow-sm"
-                        >
-                            <User size={14} />
-                            <span className="hidden xs:inline sm:inline">Profile</span>
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/attendance-history')}
-                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-teal-600 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-600 hover:text-white transition-all active:scale-95 shadow-sm"
-                        >
-                            <Clock size={14} />
-                            <span className="hidden sm:inline">History</span>
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/achievements')}
-                            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-600 hover:text-white transition-all active:scale-95 shadow-sm"
-                        >
-                            <Trophy size={14} />
-                            <span className="hidden sm:inline">Achievements</span>
-                        </button>
-
+                    <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                             <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">System Live</span>
                         </div>
-                        <button
-                            onClick={logout}
-                            className="group flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-600 bg-white border border-slate-200 hover:border-red-200 hover:bg-red-50 rounded-xl px-3 sm:px-4 py-2 transition-all shadow-sm active:scale-95"
-                        >
-                            <Power size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-                            <span className="hidden xs:inline sm:inline">Disconnect</span>
-                        </button>
                     </div>
                 </div>
             </header>
@@ -456,27 +524,29 @@ const StudentDashboard = () => {
                                     };
                                 }
 
-                                const Icon = config.icon;
-                                const windowStatus = getTimeWindowStatus(round);
-                                const isWindowRestricted = windowStatus?.type === 'WAITING' || (windowStatus?.type === 'CLOSED' && round.mySubmissionStatus !== 'IN_PROGRESS');
-                                const isInteractable = (round.status === 'WAITING_FOR_OTP' || round.status === 'RUNNING') && isEligible && !isWindowRestricted;
-                                const isLive = round.status === 'RUNNING' && isEligible && !isWindowRestricted;
+                                 const Icon = config.icon;
+                                 const windowStatus = getTimeWindowStatus(round);
+                                 const isWindowRestricted = windowStatus?.type === 'WAITING' || (windowStatus?.type === 'CLOSED' && round.mySubmissionStatus !== 'IN_PROGRESS');
+                                 const isFinished = round.mySubmissionStatus === 'SUBMITTED' || round.mySubmissionStatus === 'COMPLETED';
+                                 const isInteractable = (round.status === 'WAITING_FOR_OTP' || round.status === 'RUNNING') && isEligible && !isWindowRestricted && !isFinished;
+                                 const isLive = round.status === 'RUNNING' && isEligible && !isWindowRestricted && !isFinished;
 
-                                return (
-                                    <motion.div
-                                        key={round._id}
-                                        layout
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.05, ease: "easeOut" }}
-                                        whileHover={isInteractable ? { y: -6, scale: 1.02 } : {}}
-                                        whileTap={isInteractable ? { scale: 0.98 } : {}}
-                                        onClick={() => handleRoundClick(round)}
-                                        className={`group relative overflow-hidden rounded-3xl p-6 transition-all duration-300 bg-white
-                                            ${isInteractable ? 'cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-indigo-500/10' : 'opacity-75 cursor-not-allowed shadow-sm grayscale-[0.2]'}
-                                            ${isLive ? 'border-2 border-emerald-400/50' : 'border border-slate-200'}
-                                        `}
-                                    >
+                                 return (
+                                     <motion.div
+                                         key={round._id}
+                                         layout
+                                         initial={{ opacity: 0, y: 20 }}
+                                         animate={{ opacity: 1, y: 0 }}
+                                         transition={{ delay: index * 0.05, ease: "easeOut" }}
+                                         whileHover={isInteractable ? { y: -6, scale: 1.02 } : {}}
+                                         whileTap={isInteractable ? { scale: 0.98 } : {}}
+                                         onClick={() => handleRoundClick(round)}
+                                         className={`group relative overflow-hidden rounded-3xl p-6 transition-all duration-300 
+                                             ${isInteractable ? 'cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-indigo-500/10 bg-white border border-slate-200' : 'shadow-sm'}
+                                             ${isLive ? 'border-2 border-emerald-400/50 bg-white ring-4 ring-emerald-50' : ''}
+                                             ${isFinished ? 'bg-indigo-50/40 border border-indigo-200/50 opacity-95 grayscale-0' : (!isInteractable && !isLive ? 'bg-white border border-slate-100 opacity-70 cursor-not-allowed grayscale-[0.4]' : '')}
+                                         `}
+                                     >
                                         {/* Subtle internal gradient for live rounds */}
                                         {isLive && <div className="absolute inset-0 bg-linear-to-br from-emerald-50/50 to-transparent pointer-events-none" />}
 
@@ -557,6 +627,7 @@ const StudentDashboard = () => {
                     </div>
                 )}
             </main>
+            </div>
 
             <OtpGate
                 isOpen={isOtpOpen}
@@ -663,6 +734,17 @@ const StudentDashboard = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            <AnimatePresence>
+                {toast.show && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(p => ({ ...p, show: false }))}
+                    />
+                )}
+            </AnimatePresence>
+
         </div>
     );
 };
