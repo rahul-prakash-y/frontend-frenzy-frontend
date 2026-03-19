@@ -50,7 +50,7 @@ const SuperAdminDashboard = () => {
   }, [fetchRounds]);
 
   return (
-    <div className=" bg-[#f8fafc] font-sans selection:bg-indigo-100 selection:text-indigo-700 overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] font-sans selection:bg-indigo-100 selection:text-indigo-700 flex flex-col">
       {/* 1. GLASS-MORPHISM HEADER */}
       <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
