@@ -20,7 +20,8 @@ const PerformanceReport = () => {
         const fetchUserData = async () => {
             try {
                 const res = await api.get('/auth/profile');
-                setUser(res.data.user);
+                console.log("user", res.data);
+                setUser(res.data.profile);
             } catch {
                 toast.error("Failed to load profile data");
             } finally {
