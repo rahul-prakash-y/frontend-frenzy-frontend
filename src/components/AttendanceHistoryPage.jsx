@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, UserCheck, Clock, Calendar, Award, Loader2, AlertTriangle, CheckCircle, Users } from 'lucide-react';
+import { UserCheck, Clock, Calendar, Award, Loader2, AlertTriangle, CheckCircle, Users } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,21 +36,10 @@ const AttendanceHistoryPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-y-auto scrollbar-hide">
-            {/* Ambient glows */}
-            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
+        <>
             {/* Header */}
             <header className="bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-40 shadow-sm">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="flex items-center gap-2 px-3 py-2 text-xs font-black text-slate-500 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-white rounded-xl transition-all active:scale-95"
-                    >
-                        <ArrowLeft size={14} />
-                        Back
-                    </button>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
                     <div>
                         <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                             <UserCheck className="text-indigo-500" size={20} />
@@ -98,73 +87,50 @@ const AttendanceHistoryPage = () => {
                         <p className="text-sm font-bold text-red-500">{error}</p>
                     </div>
                 ) : records.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50"
-                    >
-                        <UserCheck size={48} className="text-slate-300 mb-4" />
-                        <p className="text-lg font-black text-slate-600">NO ATTENDANCE RECORDS</p>
-                        <p className="text-sm text-slate-400 mt-2">Your attendance will appear here once marked.</p>
-                    </motion.div>
+                    <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-24 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100/50">
+                            <Clock size={32} className="text-slate-200" />
+                        </div>
+                        <h2 className="text-lg font-black text-slate-800 mb-2 tracking-tight">Deployment records are currently null.</h2>
+                        <p className="text-sm text-slate-500 font-medium">Your presence in the arena has not been logged yet.</p>
+                    </div>
                 ) : (
-                    <div className="space-y-3">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
-                            {records.length} Record{records.length !== 1 ? 's' : ''} Found
-                        </p>
-                        <AnimatePresence>
-                            {records.map((record, index) => (
-                                <motion.div
-                                    key={record._id}
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.04, ease: 'easeOut' }}
-                                    className="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all"
-                                >
-                                    {/* Left: Session info */}
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 shrink-0 mt-0.5">
-                                            <CheckCircle size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="font-black text-slate-800 text-sm">
-                                                {record.round?.name || 'General Session'}
-                                            </p>
-                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                                                <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                                    <Users size={10} />
-                                                    Marked by: <span className="text-indigo-500">{record.markedBy?.name || 'Admin'}</span>
-                                                </span>
-                                                {record.markedBy?.studentId && (
-                                                    <span className="text-[10px] font-mono font-bold text-slate-300">
-                                                        ({record.markedBy.studentId})
-                                                    </span>
-                                                )}
-                                            </div>
+                    <div className="grid grid-cols-1 gap-3">
+                        <div className="flex items-center justify-between px-4">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Validated Timeline</h3>
+                        </div>
+                        {records.map((record, index) => (
+                            <motion.div
+                                key={record._id}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Calendar size={22} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-slate-800 text-base">{formatDate(record.createdAt)}</h4>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Authentication: Validated</p>
                                         </div>
                                     </div>
-
-                                    {/* Right: Timestamp */}
-                                    <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3 sm:gap-1 shrink-0">
-                                        <div className="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                                            <Calendar size={12} className="text-indigo-400" />
-                                            {formatDate(record.createdAt)}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                                            <Clock size={12} />
-                                            {formatTime(record.createdAt)}
-                                        </div>
-                                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-[9px] font-black uppercase tracking-widest">
-                                            Present
-                                        </span>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-all">
+                                    <Clock size={14} className="text-slate-400 group-hover:text-indigo-500" />
+                                    <span className="text-xs font-black text-slate-700 font-mono tracking-wider group-hover:text-indigo-600">
+                                        {formatTime(record.createdAt)}
+                                    </span>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
                 )}
             </main>
-        </div>
+        </>
     );
 };
 

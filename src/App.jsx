@@ -21,6 +21,7 @@ import AttendanceHistoryPage from './components/AttendanceHistoryPage';
 import AchievementsPage from './components/AchievementsPage';
 import PerformanceReport from './components/PerformanceReport';
 import PracticeArena from './components/PracticeArena';
+import StudentLayout from './components/StudentLayout';
 
 import { useAuthStore } from './store/authStore';
 
@@ -64,13 +65,17 @@ const AppRoutes = () => {
 
             {/* Protected App Core (STUDENTS) */}
             <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<StudentDashboard />} />
-
-                {/* Dynamic route targeting the active Hackathon/Challenge ID */}
-                <Route path="/arena/:roundId" element={<CodeArena />} />
-
-                {/* Practice mode — read-only question preview */}
-                <Route path="/practice/:roundId" element={<PracticeArena />} />
+                <Route element={<StudentLayout />}>
+                    <Route path="/dashboard" element={<StudentDashboard />} />
+                    <Route path="/arena/:roundId" element={<CodeArena />} />
+                    <Route path="/practice/:roundId" element={<PracticeArena />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/attendance-history" element={<AttendanceHistoryPage />} />
+                    <Route path="/achievements" element={<AchievementsPage />} />
+                    <Route path="/performance-report" element={<PerformanceReport />} />
+                    
+                </Route>
+                <Route path="/onboarding" element={<OnboardingPage />} />
             </Route>
 
             {/* Secure Command Center (ADMINS ONLY) */}
@@ -86,57 +91,8 @@ const AppRoutes = () => {
             {/* Blocked Account Page */}
             <Route path="/blocked" element={<BlockedAccount />} />
 
-            {/* Student Onboarding Page */}
-            <Route
-                path="/onboarding"
-                element={
-                    <ProtectedRoute>
-                        <OnboardingPage />
-                    </ProtectedRoute>
-                }
-            />
-
-            {/* Student Profile Page */}
-            <Route
-                path="/profile"
-                element={
-                    <ProtectedRoute>
-                        <ProfilePage />
-                    </ProtectedRoute>
-                }
-            />
-
-            {/* Student Attendance History */}
-            <Route
-                path="/attendance-history"
-                element={
-                    <ProtectedRoute>
-                        <AttendanceHistoryPage />
-                    </ProtectedRoute>
-                }
-            />
-
-            {/* Student Achievements */}
-            <Route
-                path="/achievements"
-                element={
-                    <ProtectedRoute>
-                        <AchievementsPage />
-                    </ProtectedRoute>
-                }
-            />
-
             {/* 404 Fallback Catch */}
             <Route path="*" element={<RoleFallback />} />
-            {/* Student Performance Reports */}
-            <Route
-                path="/performance-report"
-                element={
-                    <ProtectedRoute>
-                        <PerformanceReport />
-                    </ProtectedRoute>
-                }
-            />
         </Routes>
     );
 };

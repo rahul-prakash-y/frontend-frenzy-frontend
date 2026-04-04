@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { 
     FileText, Download, Shield, AlertCircle, 
     CheckCircle2, Loader2, Trophy, BarChart3,
-    ArrowRight, Info, ExternalLink, ArrowLeft, Search, 
+    ArrowRight, Info, ExternalLink, Search, 
     Sparkles, Target, Zap
 } from 'lucide-react';
 import { api } from '../store/authStore';
@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const PerformanceReport = () => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [downloading, setDownloading] = useState({ self: false, team: false });
@@ -20,7 +19,6 @@ const PerformanceReport = () => {
         const fetchUserData = async () => {
             try {
                 const res = await api.get('/auth/profile');
-                console.log("user", res.data);
                 setUser(res.data.profile);
             } catch {
                 toast.error("Failed to load profile data");
@@ -58,14 +56,12 @@ const PerformanceReport = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-6">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-                        <Target size={24} className="text-indigo-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-                    </div>
-                    <p className="text-slate-500 font-black text-xs uppercase tracking-[0.2em] animate-pulse">Synchronizing Analytics Data...</p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+                <div className="relative">
+                    <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                    <Target size={24} className="text-indigo-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
                 </div>
+                <p className="text-slate-500 font-black text-xs uppercase tracking-[0.2em] animate-pulse">Synchronizing Analytics Data...</p>
             </div>
         );
     }
@@ -88,30 +84,16 @@ const PerformanceReport = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-y-auto scrollbar-hide">
-            {/* Ambient Background Glows */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]" />
-            </div>
-
+        <>
             {/* Premium Header */}
             <header className="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50 px-8 flex items-center shadow-sm">
-                <div className="max-w-6xl w-full mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="p-3 text-slate-500 hover:text-indigo-600 bg-white border border-slate-200 rounded-2xl shadow-xs transition-all active:scale-90 hover:shadow-md"
-                        >
-                            <ArrowLeft size={18} />
-                        </button>
-                        <div>
-                            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                <BarChart3 className="text-indigo-600" size={24} />
-                                Performance <span className="text-slate-400">HUB</span>
-                            </h1>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Secure Analytics Portal v1.2</p>
-                        </div>
+                <div className="max-w-6xl w-full mx-auto flex items-center justify-between font-sans">
+                    <div>
+                        <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                            <BarChart3 className="text-indigo-600" size={24} />
+                            Performance <span className="text-slate-400">HUB</span>
+                        </h1>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Secure Analytics Portal v1.2</p>
                     </div>
                     
                     <div className="hidden md:flex items-center gap-8">
@@ -126,7 +108,7 @@ const PerformanceReport = () => {
                 </div>
             </header>
 
-            <main className="relative z-10 max-w-6xl mx-auto px-8 py-12 md:py-20">
+            <main className="relative z-10 max-w-6xl mx-auto px-8 py-12 md:py-20 font-sans">
                 <motion.div 
                     variants={containerVariants}
                     initial="hidden"
@@ -274,7 +256,7 @@ const PerformanceReport = () => {
                     </motion.div>
                 </motion.div>
             </main>
-        </div>
+        </>
     );
 };
 

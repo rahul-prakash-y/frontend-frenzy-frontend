@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Award, Download, Loader2, Sparkles, Calendar, Trophy, Medal, Star, ShieldCheck } from 'lucide-react';
+import { Award, Download, Loader2, Sparkles, Calendar, Trophy, Medal, Star, ShieldCheck } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -57,21 +57,11 @@ const AchievementsPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 relative overflow-y-auto scrollbar-hide">
-            {/* Design Elements */}
-            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-violet-500/5 rounded-full blur-[120px] pointer-events-none" />
-
+        <>
             {/* Header */}
             <header className="bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-40 shadow-sm">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 border border-slate-200 rounded-xl transition-all active:scale-95"
-                        >
-                            <ArrowLeft size={18} />
-                        </button>
                         <div>
                             <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                                 <Award className="text-indigo-600" size={24} />
@@ -83,7 +73,7 @@ const AchievementsPage = () => {
                 </div>
             </header>
 
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12 relative z-10">
+            <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12 relative z-10 font-sans">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-4">
                         <div className="relative">
@@ -190,7 +180,7 @@ const AchievementsPage = () => {
                     </div>
                 )}
             </main>
-        </div>
+        </>
     );
 };
 
