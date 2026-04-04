@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle, Trophy, BarChart3 } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, LogOut, ArrowRight, Sparkles, UserCheck, Loader2, AlertTriangle, Check, ShieldAlert, User, Power, FileDown, Award, Timer, Users, Send, RefreshCw, XCircle, Trophy, BarChart3, BookOpen } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -646,7 +646,7 @@ const StudentDashboard = () => {
                                         </div>
 
                                         {/* Interactive Footer */}
-                                        <div className={`mt-8 pt-4 border-t transition-colors flex items-center justify-between
+                                        <div className={`mt-8 pt-4 border-t transition-colors flex items-center justify-between gap-3
                                             ${isLive ? 'border-emerald-100/50' : 'border-slate-100'}
                                         `}>
                                             
@@ -659,11 +659,21 @@ const StudentDashboard = () => {
                                                                         round.status === 'WAITING_FOR_OTP' ? 'Requires Auth Key' :
                                                                             'Session Ready'}
                                                 </p>
-                                            {isInteractable && (
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isLive ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white'}`}>
-                                                    <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                {/* Practice Test Button — always visible */}
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); navigate(`/practice/${round._id}`); }}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all active:scale-95 whitespace-nowrap"
+                                                >
+                                                    <BookOpen size={12} />
+                                                    Practice
+                                                </button>
+                                                {isInteractable && (
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isLive ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white'}`}>
+                                                        <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 );

@@ -20,6 +20,7 @@ import ProfilePage from './components/ProfilePage';
 import AttendanceHistoryPage from './components/AttendanceHistoryPage';
 import AchievementsPage from './components/AchievementsPage';
 import PerformanceReport from './components/PerformanceReport';
+import PracticeArena from './components/PracticeArena';
 
 import { useAuthStore } from './store/authStore';
 
@@ -67,6 +68,9 @@ const AppRoutes = () => {
 
                 {/* Dynamic route targeting the active Hackathon/Challenge ID */}
                 <Route path="/arena/:roundId" element={<CodeArena />} />
+
+                {/* Practice mode — read-only question preview */}
+                <Route path="/practice/:roundId" element={<PracticeArena />} />
             </Route>
 
             {/* Secure Command Center (ADMINS ONLY) */}
