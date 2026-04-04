@@ -6,6 +6,7 @@ import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonGrid } from './Skeleton';
 import toast from 'react-hot-toast';
+import { formatFullIST } from '../utils/dateUtils';
 
 const statusConfig = {
     LOCKED: {
@@ -198,7 +199,7 @@ const StudentDashboard = () => {
     const handleRoundClick = (round) => {
         const windowStatus = getTimeWindowStatus(round);
         if (windowStatus?.type === 'WAITING') {
-            toast.error(`Assessment starts at ${new Date(round.startTime).toLocaleString()}.`);
+            toast.error(`Assessment starts at ${formatFullIST(round.startTime)}.`);
             return;
         }
         if (windowStatus?.type === 'CLOSED' && round.mySubmissionStatus !== 'IN_PROGRESS') {

@@ -4,6 +4,7 @@ import { API, ACTION_STYLES, ALL_ACTIONS } from './constants';
 import Pagination from './components/Pagination';
 import { useActivityStore } from '../../store/activityStore';
 import { SkeletonRow } from '../Skeleton';
+import { formatFullIST } from '../../utils/dateUtils';
 
 const ActivityLogsTab = () => {
     // 1. Global Store State
@@ -24,12 +25,6 @@ const ActivityLogsTab = () => {
         }, 300);
         return () => clearTimeout(handler);
     }, [search]);
-
-    // Unified Fetch Effect: Fetch logs and reset page when filters change
-    useEffect(() => {
-        // Reset page to 1 if filters change (this will trigger the next effect)
-        setPage(1);
-    }, [actionFilter, debouncedSearch, limit]);
 
     useEffect(() => {
         const params = { page, limit };
@@ -125,9 +120,7 @@ const ActivityLogsTab = () => {
                                             {log.target?.label || '—'}
                                         </td>
                                         <td className="px-5 py-3 text-gray-400 whitespace-nowrap font-mono text-xs">
-                                            {new Date(log.createdAt).toLocaleString(undefined, {
-                                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
-                                            })}
+                                            {formatFullIST(log.createdAt)}
                                         </td>
                                         <td className="px-5 py-3 text-gray-400 font-mono text-xs group-hover:text-gray-600 transition-colors">
                                             {log.ip || '—'}

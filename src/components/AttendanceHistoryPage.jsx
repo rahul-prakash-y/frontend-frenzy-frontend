@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserCheck, Clock, Calendar, Award, Loader2, AlertTriangle, CheckCircle, Users } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+import { formatDateIST, formatTimeIST } from '../utils/dateUtils';
 
 const AttendanceHistoryPage = () => {
     const navigate = useNavigate();
@@ -25,15 +26,8 @@ const AttendanceHistoryPage = () => {
         fetchHistory();
     }, []);
 
-    const formatDate = (dateStr) => {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    };
-
-    const formatTime = (dateStr) => {
-        const d = new Date(dateStr);
-        return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
+    const formatDate = (dateStr) => formatDateIST(dateStr);
+    const formatTime = (dateStr) => formatTimeIST(dateStr);
 
     return (
         <>

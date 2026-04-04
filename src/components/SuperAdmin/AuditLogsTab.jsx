@@ -9,6 +9,7 @@ import { useConfirm } from '../../store/confirmStore';
 import { useAuditStore } from '../../store/auditStore';
 import Pagination from './components/Pagination';
 import { SkeletonList } from '../Skeleton';
+import { formatDateIST } from '../../utils/dateUtils';
 
 // ─── Extra Time / Re-entry Modal ─────────────────────────────────────────────
 const ExtraTimeModal = ({ isOpen, onClose, onConfirm, studentName, title, type }) => {
@@ -400,7 +401,7 @@ const AuditLogsTab = () => {
                                                             </div>
                                                             <div className="flex items-center justify-between mt-1 text-[9px] font-bold">
                                                                 <span className="text-slate-400">Awarded by: <span className="text-indigo-500">{ms.adminId?.name || 'Unknown Admin'}</span></span>
-                                                                <span className="text-slate-300">{ms.evaluatedAt ? new Date(ms.evaluatedAt).toLocaleDateString() : ''}</span>
+                                                                <span className="text-slate-300">{ms.evaluatedAt ? formatDateIST(ms.evaluatedAt) : ''}</span>
                                                             </div>
                                                             {ms.feedback && (
                                                                 <div className="bg-slate-50 rounded-lg p-2 border border-slate-100">

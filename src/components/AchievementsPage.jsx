@@ -4,9 +4,9 @@ import { Award, Download, Loader2, Sparkles, Calendar, Trophy, Medal, Star, Shie
 import { api, useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { formatDateIST } from '../utils/dateUtils';
 
 const AchievementsPage = () => {
-    const navigate = useNavigate();
     const { user } = useAuthStore();
     const [certificates, setCertificates] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -49,11 +49,7 @@ const AchievementsPage = () => {
     };
 
     const formatDate = (dateStr) => {
-        return new Date(dateStr).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
+        return formatDateIST(dateStr);
     };
 
     return (

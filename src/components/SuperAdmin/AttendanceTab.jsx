@@ -5,6 +5,7 @@ import { API } from './constants';
 import Pagination from './components/Pagination';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { SkeletonList } from '../Skeleton';
+import { formatFullIST } from '../../utils/dateUtils';
 
 const AttendanceTab = () => {
     // 1. Global Store State
@@ -184,7 +185,7 @@ const AttendanceTab = () => {
                                             <div className="inline-flex items-center gap-2 text-slate-500">
                                                 <Clock size={14} />
                                                 <span className="text-xs font-bold">
-                                                    {new Date(record.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                                    {formatFullIST(record.createdAt)}
                                                 </span>
                                             </div>
                                         </td>
