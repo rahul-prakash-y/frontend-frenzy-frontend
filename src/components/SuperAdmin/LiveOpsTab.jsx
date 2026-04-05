@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import {
   RefreshCw, PlayCircle, Eye, Loader2, StopCircle,
   Clock, CheckCircle2, Plus, AlertTriangle, Trash2, X, Timer, Shuffle, Settings2,
   KeyRound,
-  Play, LayoutGrid
+  Play, LayoutGrid, Zap
 } from 'lucide-react';
 import { api } from '../../store/authStore';
 import { useRoundStore } from '../../store/roundStore';
@@ -249,8 +249,79 @@ const QuestionSettings = ({ section, onSave, busy }) => {
   );
 };
 
+// ── Practice Mode settings per section ─────────────────────────────────────────
+const PracticeSettings = ({ section, onSave, busy }) => {
+  const [enabled, setEnabled] = useState(section.isPracticeEnabled || false);
+  const [qCount, setQCount] = useState(section.practiceQuestionCount ?? '');
+  const [attempts, setAttempts] = useState(section.maxPracticeAttempts ?? 3);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    await onSave(section._id, {
+      isPracticeEnabled: enabled,
+      practiceQuestionCount: qCount === '' ? null : Number(qCount),
+      maxPracticeAttempts: attempts === '' ? 3 : Number(attempts)
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="mb-3 p-3 bg-amber-50/60 border border-amber-100 rounded-xl">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <Zap size={10} className="text-amber-500" />
+          <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Practice Mode Protocol</p>
+        </div>
+        <button
+          onClick={() => setEnabled(!enabled)}
+          className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-tighter transition-all ${enabled ? 'bg-amber-500 text-white shadow-sm shadow-amber-200' : 'bg-slate-200 text-slate-500'}`}
+        >
+          {enabled ? 'Active' : 'Disabled'}
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 min-w-[120px]">
+            <label className="text-[10px] font-bold text-slate-500 whitespace-nowrap">Qs per session</label>
+            <input
+              type="number"
+              min={1}
+              value={qCount}
+              onChange={e => setQCount(e.target.value)}
+              placeholder="All"
+              className="w-16 text-center text-xs font-bold bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+            />
+          </div>
+          <div className="flex items-center gap-1.5 min-w-[100px]">
+            <label className="text-[10px] font-bold text-slate-500 whitespace-nowrap">Max Attempts</label>
+            <input
+              type="number"
+              min={1}
+              value={attempts}
+              onChange={e => setAttempts(e.target.value)}
+              placeholder="3"
+              className="w-14 text-center text-xs font-bold bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={busy}
+          className={`w-full py-1.5 rounded-lg text-[10px] font-black border transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${saved ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
+            }`}
+        >
+          {busy ? <Loader2 size={10} className="animate-spin" /> : saved ? '✓ Settings Synchronized' : 'Update Practice Settings'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ── A unified Test Card representing a group of sections ─────────────────────────
-const TestCard = ({ group, busy, onAct, onSaveSettings, onDeleteGroup, onAddTime, onDeleteSection, onProjector }) => {
+const TestCard = ({ group, busy, onAct, onSaveSettings, onSavePracticeSettings, onDeleteGroup, onAddTime, onDeleteSection, onProjector }) => {
   const [activeIdx, setActiveIdx] = useState(0);
   const section = group.sections[activeIdx] || group.sections[0];
   const isMulti = group.sections.length > 1;
@@ -309,6 +380,14 @@ const TestCard = ({ group, busy, onAct, onSaveSettings, onDeleteGroup, onAddTime
           section={section}
           onSave={onSaveSettings}
           busy={busy[`${section._id}-qsettings`]}
+        />
+
+        {/* Practice Mode Settings */}
+        <PracticeSettings
+          key={section._id}
+          section={section}
+          onSave={onSavePracticeSettings}
+          busy={busy[`${section._id}-psettings`]}
         />
 
         {/* Action Toolbar */}
@@ -432,6 +511,19 @@ const LiveOpsTab = () => {
       console.error('Failed to save question settings:', err);
     } finally {
       setBusy(b => ({ ...b, [`${sectionId}-qsettings`]: false }));
+    }
+  };
+
+  const handleSavePracticeSettings = async (sectionId, settings) => {
+    setBusy(b => ({ ...b, [`${sectionId}-psettings`]: true }));
+    try {
+      const res = await api.patch(`${API}/rounds/${sectionId}/practice-settings`, settings);
+      const updatedSection = res.data.data;
+      updateRound(sectionId, updatedSection);
+    } catch (err) {
+      console.error('Failed to save practice settings:', err);
+    } finally {
+      setBusy(b => ({ ...b, [`${sectionId}-psettings`]: false }));
     }
   };
 
@@ -596,6 +688,7 @@ const LiveOpsTab = () => {
             busy={busy}
             onAct={handleTestCardAction}
             onSaveSettings={handleSaveQuestionSettings}
+            onSavePracticeSettings={handleSavePracticeSettings}
             onDeleteGroup={handleDeleteGroup}
             onAddTime={handleAddTime}
             onDeleteSection={handleDeleteSection}

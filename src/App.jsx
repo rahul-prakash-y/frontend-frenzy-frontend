@@ -21,6 +21,7 @@ import AttendanceHistoryPage from './components/AttendanceHistoryPage';
 import AchievementsPage from './components/AchievementsPage';
 import PerformanceReport from './components/PerformanceReport';
 import PracticeArena from './components/PracticeArena';
+import PracticeDashboard from './components/PracticeDashboard';
 import StudentLayout from './components/StudentLayout';
 
 import { useAuthStore } from './store/authStore';
@@ -73,7 +74,7 @@ const AppRoutes = () => {
                     <Route path="/attendance-history" element={<AttendanceHistoryPage />} />
                     <Route path="/achievements" element={<AchievementsPage />} />
                     <Route path="/performance-report" element={<PerformanceReport />} />
-                    
+                    <Route path="/practice-dashboard" element={<PracticeDashboard />} />
                 </Route>
                 <Route path="/onboarding" element={<OnboardingPage />} />
             </Route>

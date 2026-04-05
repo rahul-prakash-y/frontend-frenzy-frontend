@@ -226,6 +226,15 @@ const StudentDashboard = () => {
         setSelectedRound(null);
     };
 
+    const handlePracticeStart = async (roundId) => {
+        try {
+            await api.post(`/rounds/${roundId}/practice-start`);
+            navigate(`/practice/${roundId}`);
+        } catch (e) {
+            toast.error(e.response?.data?.message || e.response?.data?.error || 'Failed to start practice session.');
+        }
+    };
+
     const handleTeamRequest = async () => {
         setSubmittingRequest(true);
         try {
@@ -348,6 +357,11 @@ const StudentDashboard = () => {
                                     const isInteractable = (round.status === 'WAITING_FOR_OTP' || round.status === 'RUNNING') && isEligible && !isWindowRestricted && !isFinished;
                                     const isLive = round.status === 'RUNNING' && isEligible && !isWindowRestricted && !isFinished;
 
+                                    // Practice Info
+                                    const hasPractice = round.practiceAttempts > 0;
+                                    const practiceLimit = round.maxPracticeAttempts ?? 3;
+                                    const canPractice = round.isPracticeEnabled && (round.practiceAttempts < practiceLimit || round.myPracticeStatus === 'IN_PROGRESS');
+
                                     return (
                                         <motion.div
                                             key={round._id} layout variants={itemVariants}
@@ -357,7 +371,19 @@ const StudentDashboard = () => {
                                         >
                                             <div className="flex justify-between items-start mb-8">
                                                 <div className={`p-3 rounded-2xl border ${config.bg} ${config.border} ${config.color}`}><Icon size={24} /></div>
-                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${config.badge}`}>{config.label}</span>
+                                                <div className="flex flex-col items-end gap-2 text-right">
+                                                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${config.badge}`}>{config.label}</span>
+                                                    {round.myPracticeStatus && (
+                                                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider border flex items-center gap-1
+                                                            ${round.myPracticeStatus === 'COMPLETED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
+                                                                round.myPracticeStatus === 'SUBMITTED' ? 'bg-amber-50 border-amber-200 text-amber-600' :
+                                                                    'bg-indigo-50 border-indigo-200 text-indigo-600'}`}>
+                                                            <BookOpen size={10} />
+                                                            {round.myPracticeStatus === 'COMPLETED' ? `Practice Score: ${round.myPracticeScore || 0}` :
+                                                                round.myPracticeStatus === 'SUBMITTED' ? 'Evaluation Pending' : 'Practice Active'}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="space-y-4">
                                                 <h3 className="text-xl font-black text-slate-900 leading-tight">{round.name}</h3>
@@ -372,9 +398,27 @@ const StudentDashboard = () => {
                                             <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status: {config.label}</p>
                                                 <div className="flex items-center gap-2">
-                                                    <button onClick={(e) => { e.stopPropagation(); navigate(`/practice/${round._id}`); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all active:scale-95 shadow-sm">
-                                                        <BookOpen size={12} /> Practice
-                                                    </button>
+                                                    {canPractice && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (round.myPracticeStatus === 'IN_PROGRESS') {
+                                                                    navigate(`/practice/${round._id}`);
+                                                                } else {
+                                                                    handlePracticeStart(round._id);
+                                                                }
+                                                            }}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm border
+                                                                ${round.myPracticeStatus === 'IN_PROGRESS' ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                                                        >
+                                                            {round.myPracticeStatus === 'IN_PROGRESS' ? 'Resume Practice' : (
+                                                                <>
+                                                                    <BookOpen size={12} />
+                                                                    Practice {hasPractice ? `(${practiceLimit - round.practiceAttempts} left)` : ''}
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    )}
                                                     {isInteractable && <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 transition-all group-hover:bg-indigo-600 group-hover:text-white"><ArrowRight size={14} /></div>}
                                                 </div>
                                             </div>

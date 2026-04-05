@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Play, UserCheck, User, Clock, Trophy, BarChart3, Power, Sparkles, 
-    XCircle, AlertTriangle, Check, Loader2 
+    XCircle, AlertTriangle, Check, Loader2, Zap
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore, api } from '../store/authStore';
 
-const SidebarItem = ({ icon: Icon, onClick, label, variant = "indigo", isActive = false }) => {
+const SidebarItem = ({ icon, onClick, label, variant = "indigo", isActive = false }) => {
+    const Icon = icon;
     const variants = {
         indigo: "text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-200",
         violet: "text-violet-600 border-violet-100 hover:bg-violet-600 hover:text-white hover:shadow-violet-200",
@@ -111,6 +112,13 @@ const Sidebar = () => {
                         variant="violet"
                         isActive={location.pathname === '/performance-report'}
                         onClick={() => navigate('/performance-report')}
+                    />
+                    <SidebarItem
+                        icon={Zap}
+                        label="Practice Matrix"
+                        variant="amber"
+                        isActive={location.pathname === '/practice-dashboard'}
+                        onClick={() => navigate('/practice-dashboard')}
                     />
                 </div>
 

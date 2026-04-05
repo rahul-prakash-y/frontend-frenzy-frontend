@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Split from 'react-split';
 import Editor from '@monaco-editor/react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, CheckCircle, HelpCircle, Code2,
     BookOpen, AlertTriangle, Power, ArrowLeft, Sparkles, Eye, EyeOff
@@ -31,6 +31,9 @@ const PracticeArena = ({ language = 'javascript' }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState(null);
     const [showPreview, setShowPreview] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [lastSaved, setLastSaved] = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [isMobile, setIsMobile] = useState(
         typeof window !== 'undefined' ? window.innerWidth < 1024 : false
     );
@@ -47,15 +50,19 @@ const PracticeArena = ({ language = 'javascript' }) => {
             setIsLoading(true);
             setLoadError(null);
             try {
-                const res = await api.get(`/rounds/${roundId}/questions`);
+                const res = await api.get(`/rounds/${roundId}/practice-questions`);
                 setQuestions(res.data.data.questions);
                 setRoundInfo(res.data.data.round);
+                
+                // If there were previously saved answers in the session, they should be loaded here
+                // However, the practice-questions endpoint currently doesn't return them.
+                // For now, we start fresh or wait for an update to that API.
                 const initialAnswers = {};
                 res.data.data.questions.forEach(q => (initialAnswers[q._id] = ''));
                 setAnswers(initialAnswers);
             } catch (err) {
                 if (err.response?.status === 403) {
-                    setLoadError('Questions are not available for practice yet. The round may be locked or restricted by your administrator.');
+                    setLoadError(err.response.data.message || 'Questions are not available for practice yet. The round may be locked or restricted by your administrator.');
                 } else {
                     setLoadError('Failed to load practice questions. Please check your connection and try again.');
                 }
@@ -66,10 +73,41 @@ const PracticeArena = ({ language = 'javascript' }) => {
         load();
     }, [roundId]);
 
+    // ── Autosave ──────────────────────────────────────────────────────────────
+    const saveTimeoutRef = React.useRef(null);
+
+    const debouncedSave = useCallback((newAnswers) => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(async () => {
+            try {
+                await api.post(`/rounds/${roundId}/practice-autosave`, { answers: newAnswers });
+                setLastSaved(new Date());
+            } catch (e) {
+                console.error('Autosave failed:', e);
+            }
+        }, 2000);
+    }, [roundId]);
+
+
     const handleAnswerChange = useCallback((questionId, value) => {
-        // Local-only — never sent to server
-        setAnswers(prev => ({ ...prev, [questionId]: value }));
-    }, []);
+        setAnswers(prev => {
+            const next = { ...prev, [questionId]: value };
+            debouncedSave(next);
+            return next;
+        });
+    }, [debouncedSave]);
+
+    const handleFinalSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            await api.post(`/rounds/${roundId}/practice-submit`, { answers });
+            navigate('/dashboard', { state: { practiceSubmitted: true } });
+        } catch (err) {
+            alert(err.response?.data?.error || 'Failed to submit practice test');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     // ── Loading state ─────────────────────────────────────────────────────────
     if (isLoading) return <SkeletonCodeArena />;
@@ -106,7 +144,7 @@ const PracticeArena = ({ language = 'javascript' }) => {
             {/* ── Practice Mode Banner ─────────────────────────────────────── */}
             <div className="shrink-0 bg-amber-400 text-amber-900 text-[11px] font-black uppercase tracking-widest text-center py-2 flex items-center justify-center gap-2 shadow-sm">
                 <Sparkles size={13} />
-                Practice Mode — This is NOT your real test. Answers are not saved.
+                Practice Mode — Answers are saved and will be evaluated.
                 <Sparkles size={13} />
             </div>
 
@@ -127,11 +165,11 @@ const PracticeArena = ({ language = 'javascript' }) => {
                             </span>
                             <span className="text-slate-300">|</span>
                             <span>Q{activeIdx + 1}/{questions.length}</span>
-                            {roundInfo?.type && (
+                            {lastSaved && (
                                 <>
-                                    <span className="text-slate-300 hidden md:inline">|</span>
-                                    <span className="hidden md:inline uppercase tracking-widest font-bold">
-                                        {roundInfo.type.replace(/_/g, ' ')}
+                                    <span className="text-slate-300">|</span>
+                                    <span className="text-emerald-600 font-bold flex items-center gap-1">
+                                        <CheckCircle size={10} /> Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </>
                             )}
@@ -142,17 +180,17 @@ const PracticeArena = ({ language = 'javascript' }) => {
                 <div className="flex items-center gap-3">
                     {/* Practice badge replaces the live timer */}
                     <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm font-black border bg-amber-50 border-amber-200 text-amber-700 shadow-sm">
-                        <Eye size={15} />
-                        <span>Read-Only Preview</span>
+                        <Sparkles size={15} />
+                        <span>Practice Evaluation Enabled</span>
                     </div>
 
-                    {/* Back to dashboard */}
+                    {/* Exit Practice */}
                     <button
                         onClick={() => navigate('/dashboard')}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black tracking-wide transition-all shadow-sm active:scale-95 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs sm:text-sm"
                     >
                         <Power size={15} />
-                        <span className="hidden sm:inline">Exit Practice</span>
+                        <span className="hidden sm:inline">Exit</span>
                     </button>
                 </div>
             </header>
@@ -301,7 +339,7 @@ const PracticeArena = ({ language = 'javascript' }) => {
                     </AnimatePresence>
                 </div>
 
-                {/* Right: Answer Input (read-only, local state only) */}
+                {/* Right: Answer Input */}
                 <div className="h-full flex flex-col bg-white overflow-hidden border-l border-slate-200">
 
                     {/* IDE Header */}
@@ -329,13 +367,12 @@ const PracticeArena = ({ language = 'javascript' }) => {
                         )}
                     </div>
 
-                    {/* Practice notice watermark inside editor area */}
                     <div className="relative flex-1 overflow-hidden bg-slate-50/30 flex flex-col">
 
                         {/* Subtle watermark */}
-                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.025] select-none">
-                            <span className="text-7xl font-black uppercase tracking-widest text-amber-500 rotate-[-20deg]">
-                                PRACTICE
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.015] select-none">
+                            <span className="text-7xl font-black uppercase tracking-widest text-indigo-500 rotate-[-20deg]">
+                                PRACTICE SESSION
                             </span>
                         </div>
 
@@ -343,7 +380,7 @@ const PracticeArena = ({ language = 'javascript' }) => {
                             <div className="p-8 h-full overflow-y-auto custom-scrollbar relative z-10">
                                 <div className="max-w-xl mx-auto space-y-4 pt-4">
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">
-                                        Select answer (practice only — not saved)
+                                        Select your answer
                                     </h3>
                                     {q?.options?.map((opt, i) => (
                                         <button
@@ -387,7 +424,7 @@ const PracticeArena = ({ language = 'javascript' }) => {
                                         scrollBeyondLastLine: false,
                                         smoothScrolling: true,
                                         cursorBlinking: 'smooth',
-                                        readOnly: false, // writable for practice exploration
+                                        readOnly: false,
                                         renderLineHighlight: 'all',
                                         hideCursorInOverviewRuler: true
                                     }}
@@ -396,7 +433,7 @@ const PracticeArena = ({ language = 'javascript' }) => {
                         ) : (
                             <div className="p-6 h-full flex flex-col max-w-4xl mx-auto w-full relative z-10">
                                 <textarea
-                                    placeholder="// Practice your answer here (not saved)..."
+                                    placeholder="// Enter your answer here..."
                                     className="flex-1 bg-white border border-slate-200 rounded-2xl p-6 text-slate-700 font-mono text-sm focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 resize-none leading-relaxed transition-all shadow-sm custom-scrollbar"
                                     value={currentAnswer}
                                     onChange={e => handleAnswerChange(q?._id, e.target.value)}
@@ -411,19 +448,60 @@ const PracticeArena = ({ language = 'javascript' }) => {
                     {/* Footer action */}
                     <div className="shrink-0 border-t border-slate-200 bg-slate-50/80 px-4 py-3 flex items-center justify-between">
                         <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
-                            <BookOpen size={11} /> Practice Mode — Nothing is submitted
+                            <Sparkles size={11} /> Progress is automatically saved
                         </span>
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 active:scale-95"
-                        >
-                            <ArrowLeft size={14} /> Back to Dashboard
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="px-4 py-2.5 rounded-xl font-black text-xs text-slate-500 hover:text-slate-700 transition-all"
+                            >
+                                Save & Close
+                            </button>
+                            <button
+                                onClick={() => setShowConfirmModal(true)}
+                                disabled={isSubmitting}
+                                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-xs bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200 active:scale-95 disabled:opacity-50"
+                            >
+                                <CheckCircle size={14} /> {isSubmitting ? 'Finalizing...' : 'Finalize Practice'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </Split>
 
-            {/* Custom gutter + scrollbar styles (mirrored from CodeArena) */}
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {showConfirmModal && (
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100">
+                             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                                <CheckCircle size={32} />
+                             </div>
+                             <h3 className="text-2xl font-black text-slate-900 text-center mb-2">Finalize Practice?</h3>
+                             <p className="text-slate-500 text-center mb-8 font-medium">Your answers will be submitted for evaluation. You cannot modify them after this.</p>
+                             <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="flex-1 py-3.5 rounded-xl font-black text-slate-600 border border-slate-200 hover:bg-slate-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModal(false);
+                                        handleFinalSubmit();
+                                    }}
+                                    className="flex-1 py-3.5 rounded-xl font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200"
+                                >
+                                    Confirm
+                                </button>
+                             </div>
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Custom gutter + scrollbar styles */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .gutter { background-color: #f1f5f9; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; }
@@ -440,3 +518,4 @@ const PracticeArena = ({ language = 'javascript' }) => {
 };
 
 export default PracticeArena;
+
