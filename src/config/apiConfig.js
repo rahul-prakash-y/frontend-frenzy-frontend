@@ -16,10 +16,14 @@
 // ─── 1.  Pool of production backend URLs ───────────────────────────────────────
 // Vite statically replaces import.meta.env at build time, so keep all 4 vars.
 const BACKEND_POOL = [
-    import.meta.env.VITE_API_URL_1,
-    import.meta.env.VITE_API_URL_2,
-    import.meta.env.VITE_API_URL_3,
-    import.meta.env.VITE_API_URL_4,
+    "https://frontend-frenzy-backend.onrender.com",
+    'https://frontend-frenzy-backend-ajsn.onrender.com',
+    'https://frontend-frenzy-backend-3.onrender.com',
+    'https://frontend-frenzy-backend-8zj1.onrender.com',
+    'https://frontend-frenzy-backend-1-sff6.onrender.com',
+    'https://frontend-frenzy-backend-3ei3.onrender.com',
+    'https://frontend-frenzy-backend-1-8e61.onrender.com',
+    'https://frontend-frenzy-backend-1-7hw2.onrender.com'
 ].filter(Boolean); // Silently drops any undefined vars (e.g. during local dev)
 
 const DEV_URL = import.meta.env.VITE_DEV_API_URL || 'http://localhost:5000';
