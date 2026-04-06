@@ -356,12 +356,33 @@ const StudentDashboard = () => {
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex flex-col sm:items-end gap-2.5 relative z-10 w-full sm:w-auto">
-                                <div className="px-5 py-2 bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-emerald-100/50 shadow-sm shadow-emerald-100/30 flex items-center gap-2">
+                            <div className="flex flex-col sm:items-end gap-3 relative z-10 w-full sm:w-auto">
+                                <div className="px-5 py-2 bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-emerald-100/50 shadow-sm shadow-emerald-100/30 flex items-center gap-2 self-start sm:self-auto">
                                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                                     Active Deployment
                                 </div>
-                                <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                
+                                {user.team.members?.length > 0 && (
+                                    <div className="flex flex-col sm:items-end gap-2">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Squad Roster</p>
+                                        <div className="flex flex-wrap sm:justify-end gap-2 max-w-sm sm:max-w-md">
+                                            {user.team.members.map((member, i) => (
+                                                <div 
+                                                    key={i} 
+                                                    className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all duration-300
+                                                        ${member._id === user._id 
+                                                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-md shadow-indigo-100 scale-105' 
+                                                            : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-white hover:border-slate-200 hover:text-slate-700'}`}
+                                                >
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${member._id === user._id ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                                                    {member.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-xl mt-1">
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Team Reference</span>
                                     <span className="text-[10px] font-bold font-mono text-slate-600 tracking-tight">#{user.team._id?.slice(-8).toUpperCase() || 'ROOT-NODE'}</span>
                                 </div>

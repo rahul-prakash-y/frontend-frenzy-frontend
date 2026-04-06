@@ -5,7 +5,7 @@ import {
     Code, TrendingUp, Zap, ChevronRight, 
     Calendar, Trophy, Target, Globe, 
     BrainCircuit, Star, BarChart3, Loader2,
-    CheckCircle2, Circle
+    CheckCircle2, Circle, ShieldAlert
 } from 'lucide-react';
 import { api } from '../store/authStore';
 import { formatFullIST } from '../utils/dateUtils';
@@ -134,6 +134,73 @@ const PracticeDashboard = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* LeetCode-style Badges Section */}
+                    <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden relative group">
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Achievements</h3>
+                            <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                                {Object.keys(heatmap).length > 0 ? "Daily Streak Active" : "Start Journey"}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            {/* Pioneer Badge */}
+                            <BadgeItem 
+                                icon={Trophy} 
+                                label="Pioneer" 
+                                active={solved.total >= 1} 
+                                color="from-amber-400 to-orange-500"
+                                shadow="shadow-orange-200/50"
+                                description="First solve completed"
+                            />
+                            {/* Specialist Badge */}
+                            <BadgeItem 
+                                icon={Target} 
+                                label="Specialist" 
+                                active={solved.total >= 10} 
+                                color="from-indigo-400 to-blue-600"
+                                shadow="shadow-indigo-200/50"
+                                description="10 problems solved"
+                            />
+                            {/* Daily Warrior */}
+                            <BadgeItem 
+                                icon={Zap} 
+                                label="Warrior" 
+                                active={Object.keys(heatmap).length >= 1} 
+                                color="from-emerald-400 to-teal-600"
+                                shadow="shadow-emerald-200/50"
+                                description="Active practice today"
+                            />
+                             {/* Hard Core */}
+                             <BadgeItem 
+                                icon={ShieldAlert} 
+                                label="Hardcore" 
+                                active={solved.HARD > 0} 
+                                color="from-rose-400 to-red-600"
+                                shadow="shadow-red-200/50"
+                                description="Conquered a hard task"
+                            />
+                             {/* Consistent */}
+                             <BadgeItem 
+                                icon={Star} 
+                                label="Reliable" 
+                                active={recentActivity.length >= 3} 
+                                color="from-violet-400 to-purple-600"
+                                shadow="shadow-purple-200/50"
+                                description="3+ recent sessions"
+                            />
+                             {/* Analyst */}
+                             <BadgeItem 
+                                icon={BrainCircuit} 
+                                label="Analyst" 
+                                active={Object.keys(categories).length >= 2} 
+                                color="from-cyan-400 to-cyan-700"
+                                shadow="shadow-cyan-200/50"
+                                description="Mastered 2+ tags"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Heatmap & History - Right Column (8/12) */}
@@ -241,6 +308,32 @@ const DifficultyRow = ({ label, count, color, bg }) => (
         </div>
         <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
             <div className={`h-full ${bg} opacity-80`} style={{ width: `${Math.min(100, (count / 20) * 100)}%` }} />
+        </div>
+    </div>
+);
+
+const BadgeItem = ({ icon: BadgeIcon, label, active, color, shadow, description }) => (
+    <div className="flex flex-col items-center gap-2 group/badge">
+        <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 
+            ${active 
+                ? `bg-linear-to-br ${color} ${shadow} shadow-lg scale-100 hover:scale-110 active:scale-95 cursor-default` 
+                : 'bg-slate-50 border border-slate-100 grayscale opacity-40 scale-90 select-none'}`}>
+            {active && (
+                <div className="absolute inset-0 bg-linear-to-tr from-white/20 to-transparent" />
+            )}
+            <BadgeIcon size={24} className={active ? 'text-white drop-shadow-md' : 'text-slate-400'} />
+        </div>
+        <div className="text-center overflow-hidden w-full">
+            <p className={`text-[9px] font-black uppercase tracking-widest leading-none ${active ? 'text-slate-900' : 'text-slate-400 font-bold'}`}>{label}</p>
+            {active && (
+                <motion.p 
+                    initial={{ y: 5, opacity: 0 }}
+                    whileHover={{ y: 0, opacity: 1 }}
+                    className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter mt-1 truncate px-1"
+                >
+                    {description}
+                </motion.p>
+            )}
         </div>
     </div>
 );
