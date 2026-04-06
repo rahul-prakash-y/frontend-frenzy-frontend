@@ -34,6 +34,7 @@ const StudentDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [selectedRound, setSelectedRound] = useState(null);
     const [isOtpOpen, setIsOtpOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('ASSESSMENTS'); // 'ASSESSMENTS' or 'PRACTICE'
 
     // Team enrollment request state
     const [teamRequestStatus, setTeamRequestStatus] = useState(user?.teamRequest?.status || 'NONE');
@@ -323,24 +324,51 @@ const StudentDashboard = () => {
                     )}
 
                     <div>
+                        <div className="flex items-center gap-6 mb-6 border-b border-slate-100">
+                            <button
+                                onClick={() => setActiveTab('ASSESSMENTS')}
+                                className={`pb-4 text-sm font-black uppercase tracking-widest transition-all relative ${activeTab === 'ASSESSMENTS' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                Active Assessments
+                                {activeTab === 'ASSESSMENTS' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-full" />}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('PRACTICE')}
+                                className={`pb-4 text-sm font-black uppercase tracking-widest transition-all relative ${activeTab === 'PRACTICE' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                Practice Mode
+                                {activeTab === 'PRACTICE' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-full" />}
+                            </button>
+                        </div>
                         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                             <Sparkles className="text-indigo-500" size={28} />
-                            Available Assessments
+                            {activeTab === 'ASSESSMENTS' ? 'Available Assessments' : 'Practice Protocol'}
                         </h2>
                         <p className="text-slate-500 text-sm mt-2 max-w-xl leading-relaxed">
-                            {loading ? 'Scanning server nodes...' : 'Select an active assessment to initialize your session.'}
+                            {loading ? 'Scanning server nodes...' : activeTab === 'ASSESSMENTS' ? 'Select an active assessment to initialize your session.' : 'Hone your skills with these designated practice rounds.'}
                         </p>
                     </div>
 
-                    {loading ? <SkeletonGrid count={6} /> : displayRounds.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-slate-300 rounded-3xl bg-white/50">
-                            <Lock size={48} className="text-slate-300 mb-4" />
-                            <p className="text-lg font-black text-slate-600">NO ACTIVE ASSESSMENTS</p>
-                        </div>
-                    ) : (
-                        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <AnimatePresence mode="popLayout">
-                                {displayRounds.map((round) => {
+                    {loading ? <SkeletonGrid count={6} /> : (() => {
+                        const filteredRounds = displayRounds.filter(r => {
+                            if (activeTab === 'PRACTICE') return r.isPracticeEnabled;
+                            // Real assessments are those that are NOT JUST for practice, or are active
+                            return !r.isPracticeEnabled || (r.status === 'RUNNING' || r.status === 'WAITING_FOR_OTP');
+                        });
+
+                        if (filteredRounds.length === 0) {
+                            return (
+                                <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-slate-300 rounded-3xl bg-white/50">
+                                    <Lock size={48} className="text-slate-300 mb-4" />
+                                    <p className="text-lg font-black text-slate-600 uppercase">{activeTab === 'ASSESSMENTS' ? 'NO ACTIVE ASSESSMENTS' : 'NO PRACTICE ROUNDS AVAILABLE'}</p>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <AnimatePresence mode="popLayout">
+                                    {filteredRounds.map((round) => {
                                     const eligibility = round.eligibility || { eligible: true };
                                     const isEligible = eligibility.eligible !== false;
                                     let config = isEligible ? statusConfig[round.status] : {
@@ -425,9 +453,10 @@ const StudentDashboard = () => {
                                         </motion.div>
                                     );
                                 })}
-                            </AnimatePresence>
-                        </motion.div>
-                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        );
+                    })()}
                 </div>
             </main>
 

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ShieldCheck, BookOpen, ClipboardList, LogOut,
   Activity, UserCog, Users, PlayCircle, ClipboardCheck, Trophy, UserCheck,
-  Power, Award
+  Power, Award, Zap
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useRoundStore } from '../../store/roundStore';
@@ -23,6 +23,7 @@ import TeamManagerTab from './TeamManagerTab';
 import TeamScoreTab from './TeamScoreTab';
 import AttendanceTab from './AttendanceTab';
 import CertificatesTab from './CertificatesTab';
+import PracticeDashboardTab from './PracticeDashboardTab';
 
 const TABS = [
   { id: 'liveops', label: 'Live Operations', icon: PlayCircle },
@@ -33,6 +34,7 @@ const TABS = [
   { id: 'question-bank', label: 'Question Bank', icon: BookOpen },
   { id: 'questions', label: 'Test Questions', icon: ClipboardCheck },
   { id: 'evaluations', label: 'Evaluations', icon: ClipboardCheck },
+  { id: 'practice', label: 'Practice Ops', icon: Zap },
   { id: 'scores', label: 'Student Scores', icon: Trophy },
   { id: 'teams', label: 'Teams', icon: Users },
   { id: 'team-scores', label: 'Team Leaderboard', icon: Trophy },
@@ -162,6 +164,7 @@ const SuperAdminDashboard = () => {
                 {activeTab === 'team-scores' && <TeamScoreTab />}
                 {activeTab === 'attendance' && <AttendanceTab />}
                 {activeTab === 'certificates' && <CertificatesTab />}
+                {activeTab === 'practice' && <PracticeDashboardTab />}
               </div>
             </div>
 
