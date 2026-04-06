@@ -198,6 +198,22 @@ const StudentDashboard = () => {
     };
 
     const handleRoundClick = (round) => {
+        const isPractice = round.type === 'PRACTICE' || round.type === 'PRACTISE';
+
+        // If it's a practice round, bypass OTP/status checks and start session
+        if (isPractice) {
+            if (round.myPracticeStatus === 'SUBMITTED' || round.myPracticeStatus === 'COMPLETED') {
+                toast.success('Practice session complete.');
+                return;
+            }
+            if (round.myPracticeStatus === 'IN_PROGRESS') {
+                navigate(`/practice/${round._id}`);
+            } else {
+                handlePracticeStart(round._id);
+            }
+            return;
+        }
+
         const windowStatus = getTimeWindowStatus(round);
         if (windowStatus?.type === 'WAITING') {
             toast.error(`Assessment starts at ${formatFullIST(round.startTime)}.`);
@@ -351,9 +367,10 @@ const StudentDashboard = () => {
 
                     {loading ? <SkeletonGrid count={6} /> : (() => {
                         const filteredRounds = displayRounds.filter(r => {
-                            if (activeTab === 'PRACTICE') return r.isPracticeEnabled;
-                            // Real assessments are those that are NOT JUST for practice, or are active
-                            return !r.isPracticeEnabled || (r.status === 'RUNNING' || r.status === 'WAITING_FOR_OTP');
+                            const isPractice = r.type === 'PRACTICE' || r.type === 'PRACTISE';
+                            if (activeTab === 'PRACTICE') return isPractice;
+                            // Assessments tab only shows non-practice rounds
+                            return !isPractice;
                         });
 
                         if (filteredRounds.length === 0) {
@@ -371,46 +388,51 @@ const StudentDashboard = () => {
                                     {filteredRounds.map((round) => {
                                     const eligibility = round.eligibility || { eligible: true };
                                     const isEligible = eligibility.eligible !== false;
+                                    const isPractice = round.type === 'PRACTICE' || round.type === 'PRACTISE';
+                                    
                                     let config = isEligible ? statusConfig[round.status] : {
                                         icon: ShieldAlert, label: 'RESTRICTED', bg: 'bg-red-50', border: 'border-red-100', color: 'text-red-500', badge: 'border-red-200 bg-red-50 text-red-600'
-                                    };
+                                     };
+
                                     if (isEligible && (round.mySubmissionStatus === 'SUBMITTED' || round.mySubmissionStatus === 'COMPLETED')) {
                                         config = { ...statusConfig['COMPLETED'], label: 'Session Complete' };
                                     }
 
+                                    // For practice rounds, we use a simpler status
+                                    if (isPractice) {
+                                        const isFinished = round.myPracticeStatus === 'SUBMITTED' || round.myPracticeStatus === 'COMPLETED';
+                                        config = {
+                                            icon: BookOpen,
+                                            label: isFinished ? 'Completed' : round.myPracticeStatus === 'IN_PROGRESS' ? 'In Progress' : 'Available',
+                                            bg: isFinished ? 'bg-emerald-50' : 'bg-indigo-50',
+                                            border: isFinished ? 'border-emerald-200' : 'border-indigo-100',
+                                            color: isFinished ? 'text-emerald-500' : 'text-indigo-600',
+                                            badge: isFinished ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-indigo-100 text-indigo-700 border-indigo-200'
+                                        };
+                                    }
+
                                     const Icon = config.icon;
                                     const windowStatus = getTimeWindowStatus(round);
-                                    const isWindowRestricted = windowStatus?.type === 'WAITING' || (windowStatus?.type === 'CLOSED' && round.mySubmissionStatus !== 'IN_PROGRESS');
-                                    const isFinished = round.mySubmissionStatus === 'SUBMITTED' || round.mySubmissionStatus === 'COMPLETED';
-                                    const isInteractable = (round.status === 'WAITING_FOR_OTP' || round.status === 'RUNNING') && isEligible && !isWindowRestricted && !isFinished;
-                                    const isLive = round.status === 'RUNNING' && isEligible && !isWindowRestricted && !isFinished;
-
-                                    // Practice Info
-                                    const hasPractice = round.practiceAttempts > 0;
-                                    const practiceLimit = round.maxPracticeAttempts ?? 3;
-                                    const canPractice = round.isPracticeEnabled && (round.practiceAttempts < practiceLimit || round.myPracticeStatus === 'IN_PROGRESS');
+                                    const isWindowRestricted = !isPractice && (windowStatus?.type === 'WAITING' || (windowStatus?.type === 'CLOSED' && round.mySubmissionStatus !== 'IN_PROGRESS'));
+                                    const isFinished = isPractice ? (round.myPracticeStatus === 'SUBMITTED' || round.myPracticeStatus === 'COMPLETED') : (round.mySubmissionStatus === 'SUBMITTED' || round.mySubmissionStatus === 'COMPLETED');
+                                    const isInteractable = isPractice ? !isFinished : ((round.status === 'WAITING_FOR_OTP' || round.status === 'RUNNING') && isEligible && !isWindowRestricted && !isFinished);
+                                    const isLive = !isPractice && round.status === 'RUNNING' && isEligible && !isWindowRestricted && !isFinished;
 
                                     return (
                                         <motion.div
                                             key={round._id} layout variants={itemVariants}
-                                            whileHover={isInteractable ? { scale: 1.03, translateY: -8 } : {}}
+                                            whileHover={isInteractable ? { scale: 1.03, translateY: -8 } : { dropShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
                                             onClick={() => handleRoundClick(round)}
-                                            className={`group relative overflow-hidden rounded-4xl p-8 transition-all duration-500 ${isInteractable ? 'cursor-pointer shadow-xl bg-white/70 border border-white/40 hover:bg-white/80' : 'shadow-sm opacity-60 grayscale cursor-not-allowed bg-white/40 border border-slate-100'} ${isLive ? 'border-2 border-emerald-400 ring-8 ring-emerald-50/50' : ''}`}
+                                            className={`group relative overflow-hidden rounded-4xl p-8 transition-all duration-500 
+                                                ${isInteractable 
+                                                    ? 'cursor-pointer shadow-xl bg-white/70 border border-white/40 hover:bg-white/80' 
+                                                    : 'shadow-sm opacity-60 grayscale cursor-not-allowed bg-white/40 border border-slate-100'} 
+                                                ${isLive ? 'border-2 border-emerald-400 ring-8 ring-emerald-50/50' : ''}`}
                                         >
                                             <div className="flex justify-between items-start mb-8">
                                                 <div className={`p-3 rounded-2xl border ${config.bg} ${config.border} ${config.color}`}><Icon size={24} /></div>
                                                 <div className="flex flex-col items-end gap-2 text-right">
                                                     <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${config.badge}`}>{config.label}</span>
-                                                    {round.myPracticeStatus && (
-                                                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider border flex items-center gap-1
-                                                            ${round.myPracticeStatus === 'COMPLETED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
-                                                                round.myPracticeStatus === 'SUBMITTED' ? 'bg-amber-50 border-amber-200 text-amber-600' :
-                                                                    'bg-indigo-50 border-indigo-200 text-indigo-600'}`}>
-                                                            <BookOpen size={10} />
-                                                            {round.myPracticeStatus === 'COMPLETED' ? `Practice Score: ${round.myPracticeScore || 0}` :
-                                                                round.myPracticeStatus === 'SUBMITTED' ? 'Evaluation Pending' : 'Practice Active'}
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
                                             <div className="space-y-4">
@@ -420,34 +442,15 @@ const StudentDashboard = () => {
                                                         <Clock size={14} /> {round.durationMinutes} Minutes
                                                         {round.totalSections > 1 && <span className="text-[10px] uppercase font-black tracking-widest text-indigo-500 bg-indigo-50 px-2 rounded-md">{round.totalSections} Sections</span>}
                                                     </div>
-                                                    {windowStatus && <div className={`flex items-center gap-1.5 text-[11px] font-bold ${windowStatus.color}`}><Timer size={12} /> {windowStatus.label}</div>}
+                                                    {!isPractice && windowStatus && <div className={`flex items-center gap-1.5 text-[11px] font-bold ${windowStatus.color}`}><Timer size={12} /> {windowStatus.label}</div>}
                                                 </div>
                                             </div>
                                             <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status: {config.label}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                    {isPractice ? (isFinished ? 'Verdict: Sealed' : 'Mode: Manual Validation') : `Status: ${config.label}`}
+                                                </p>
                                                 <div className="flex items-center gap-2">
-                                                    {canPractice && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (round.myPracticeStatus === 'IN_PROGRESS') {
-                                                                    navigate(`/practice/${round._id}`);
-                                                                } else {
-                                                                    handlePracticeStart(round._id);
-                                                                }
-                                                            }}
-                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm border
-                                                                ${round.myPracticeStatus === 'IN_PROGRESS' ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
-                                                        >
-                                                            {round.myPracticeStatus === 'IN_PROGRESS' ? 'Resume Practice' : (
-                                                                <>
-                                                                    <BookOpen size={12} />
-                                                                    Practice {hasPractice ? `(${practiceLimit - round.practiceAttempts} left)` : ''}
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    )}
-                                                    {isInteractable && <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 transition-all group-hover:bg-indigo-600 group-hover:text-white"><ArrowRight size={14} /></div>}
+                                                    {isInteractable && <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 transition-all group-hover:bg-indigo-600 group-hover:text-white transform group-hover:translate-x-1"><ArrowRight size={14} /></div>}
                                                 </div>
                                             </div>
                                         </motion.div>

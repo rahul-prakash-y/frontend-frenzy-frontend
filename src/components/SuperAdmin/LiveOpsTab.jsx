@@ -251,14 +251,14 @@ const QuestionSettings = ({ section, onSave, busy }) => {
 
 // ── Practice Mode settings per section ─────────────────────────────────────────
 const PracticeSettings = ({ section, onSave, busy }) => {
-  const [enabled, setEnabled] = useState(section.isPracticeEnabled || false);
+  const [enabled, setEnabled] = useState(section.type === 'PRACTICE' || section.type === 'PRACTISE' || section.isPracticeEnabled || false);
   const [qCount, setQCount] = useState(section.practiceQuestionCount ?? '');
   const [attempts, setAttempts] = useState(section.maxPracticeAttempts ?? 3);
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     await onSave(section._id, {
-      isPracticeEnabled: enabled,
+      type: enabled ? 'PRACTICE' : (section.type === 'PRACTICE' || section.type === 'PRACTISE' ? 'GENERAL' : section.type),
       practiceQuestionCount: qCount === '' ? null : Number(qCount),
       maxPracticeAttempts: attempts === '' ? 3 : Number(attempts)
     });
@@ -372,8 +372,8 @@ const TestCard = ({ group, busy, onAct, onSaveSettings, onSavePracticeSettings, 
           </div>
         )}
 
-        {/* Live OTP Panel */}
-        <OtpPanel section={section} />
+        {/* Live OTP Panel - Hidden for practice rounds */}
+        {!(section.type === 'PRACTICE' || section.type === 'PRACTISE') && <OtpPanel section={section} />}
 
         {/* Question Settings */}
         <QuestionSettings
@@ -392,51 +392,59 @@ const TestCard = ({ group, busy, onAct, onSaveSettings, onSavePracticeSettings, 
 
         {/* Action Toolbar */}
         <div className="mt-auto pt-4 border-t border-slate-50 flex flex-wrap items-center gap-2">
-          {section.status === 'LOCKED' && (
-            <button
-              onClick={() => onAct(section._id, 'generate-otp')}
-              disabled={busy[`${section._id}-generate-otp`]}
-              className="flex-1 h-10 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-sm"
-            >
-              <KeyRound size={14} /> Initialize Keys
-            </button>
-          )}
+          {(section.type === 'PRACTICE' || section.type === 'PRACTISE') ? (
+             <div className="flex-1 h-10 flex items-center justify-center gap-2 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-default shadow-sm">
+                <Zap size={14} /> Practice Mode Active
+             </div>
+          ) : (
+            <>
+              {section.status === 'LOCKED' && (
+                <button
+                  onClick={() => onAct(section._id, 'generate-otp')}
+                  disabled={busy[`${section._id}-generate-otp`]}
+                  className="flex-1 h-10 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-sm"
+                >
+                  <KeyRound size={14} /> Initialize Keys
+                </button>
+              )}
 
-          {section.status === 'WAITING_FOR_OTP' && (
-            <button
-              onClick={() => onAct(section._id, 'status', 'PATCH', { status: 'RUNNING' })}
-              disabled={busy[`${section._id}-start`]}
-              className="flex-1 h-10 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-sm"
-            >
-              <Play size={14} /> Activate
-            </button>
-          )}
+              {section.status === 'WAITING_FOR_OTP' && (
+                <button
+                  onClick={() => onAct(section._id, 'status', 'PATCH', { status: 'RUNNING' })}
+                  disabled={busy[`${section._id}-start`]}
+                  className="flex-1 h-10 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-sm"
+                >
+                  <Play size={14} /> Activate
+                </button>
+              )}
 
-          {section.status === 'RUNNING' && (
-            <div className="flex-1 flex gap-2">
-              <button
-                onClick={() => onAddTime(section)}
-                className="flex-1 h-10 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
-              >
-                + Time
-              </button>
-              <button
-                onClick={() => onAct(section, 'FORCE_END')}
-                className="flex-1 h-10 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-              >
-                <StopCircle size={14} /> Kill
-              </button>
-            </div>
-          )}
+              {section.status === 'RUNNING' && (
+                <div className="flex-1 flex gap-2">
+                  <button
+                    onClick={() => onAddTime(section)}
+                    className="flex-1 h-10 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  >
+                    + Time
+                  </button>
+                  <button
+                    onClick={() => onAct(section, 'FORCE_END')}
+                    className="flex-1 h-10 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <StopCircle size={14} /> Kill
+                  </button>
+                </div>
+              )}
 
-          {(section.status === 'WAITING_FOR_OTP' || section.status === 'RUNNING') && (
-            <button
-              onClick={onProjector}
-              className="h-10 w-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all shadow-sm"
-              title="Projector Mode"
-            >
-              <Eye size={16} />
-            </button>
+              {(section.status === 'WAITING_FOR_OTP' || section.status === 'RUNNING') && (
+                <button
+                  onClick={onProjector}
+                  className="h-10 w-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all shadow-sm"
+                  title="Projector Mode"
+                >
+                  <Eye size={16} />
+                </button>
+              )}
+            </>
           )}
 
           <button
