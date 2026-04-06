@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
     Search, Loader2, ClipboardCheck, AlertTriangle, 
-    BookOpen, Zap, User, UserGroup, BarChart3,
+    BookOpen, Zap, User, Users, BarChart3,
     History, CheckCircle2, ChevronDown, ChevronUp,
     Check
 } from 'lucide-react';
