@@ -282,12 +282,6 @@ const StudentDashboard = () => {
                         </div>
                         <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-1">
                             Student: <span className="font-mono font-bold text-slate-700">{user?.name || 'Unknown'}</span> ({user?.studentId})
-                            {user?.team?.name && (
-                                <>
-                                    <span className="mx-1 text-slate-300">|</span>
-                                    Team: <span className="text-indigo-600 font-bold">{user.team.name}</span>
-                                </>
-                            )}
                         </p>
                     </div>
                 </div>
@@ -336,6 +330,43 @@ const StudentDashboard = () => {
                                     {submittingRequest ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enrollment Request
                                 </button>
                             )}
+                        </motion.div>
+                    )}
+
+                    {/* Highlighted Team Identity Card */}
+                    {user?.team && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-white border border-slate-200/60 rounded-4xl p-6 sm:p-8 shadow-xl shadow-slate-100/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden group"
+                        >
+                            <div className="absolute top-0 right-0 p-8 text-indigo-50/50 -rotate-12 transition-transform group-hover:rotate-0">
+                                <Users size={120} />
+                            </div>
+                            <div className="flex items-center gap-5 relative z-10">
+                                <div className="p-4 bg-linear-to-tr from-indigo-500 to-indigo-700 text-white rounded-3xl shadow-lg shadow-indigo-200">
+                                    <Users size={32} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h2 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+                                        Assigned Squad
+                                    </h2>
+                                    <p className="text-3xl font-black text-slate-800 tracking-tight capitalize leading-tight">
+                                        {user.team.name}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:items-end gap-2.5 relative z-10 w-full sm:w-auto">
+                                <div className="px-5 py-2 bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest rounded-2xl border border-emerald-100/50 shadow-sm shadow-emerald-100/30 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                    Active Deployment
+                                </div>
+                                <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Team Reference</span>
+                                    <span className="text-[10px] font-bold font-mono text-slate-600 tracking-tight">#{user.team._id?.slice(-8).toUpperCase() || 'ROOT-NODE'}</span>
+                                </div>
+                            </div>
                         </motion.div>
                     )}
 
