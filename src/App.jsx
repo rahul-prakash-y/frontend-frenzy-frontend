@@ -185,16 +185,6 @@ function App() {
                     <Toaster position="top-right" />
                     <ConfirmModal />
                     <AppRoutes />
-                    {/* Minimal RCB Fan Boy Credit */}
-                    <div className="fixed bottom-6 right-6 px-3 py-1.5 bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-xl shadow-sm z-9999 flex items-center gap-2.5 hover:bg-white hover:border-indigo-200/50 transition-all cursor-default select-none group">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 bg-[#cc0000] rounded-full shadow-[0_0_8px_#cc0000] animate-pulse" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-indigo-500 transition-colors">
-                                Created by RCB fan boy
-                            </span>
-                        </div>
-                        <span className="text-[10px] grayscale group-hover:grayscale-0 transition-all">❤️</span>
-                    </div>
                 </Router>
             </DuplicateTabGuard>
         </StudentRecoveryBoundary>
