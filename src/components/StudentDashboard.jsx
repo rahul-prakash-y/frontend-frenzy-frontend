@@ -271,9 +271,8 @@ const StudentDashboard = () => {
             {/* Header Section */}
             <header className="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-8 shrink-0 shadow-sm relative z-40">
                 <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-linear-to-tr from-indigo-600 to-violet-600 rounded-2xl shadow-lg shadow-indigo-200 group transition-transform hover:rotate-3 cursor-pointer">
-                        <Sparkles className="text-white group-hover:scale-110 transition-transform" size={20} />
-                    </div>
+                
+                    <img src="./codecirclelogo.png" className="size-10" />
                     <div>
                         <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">CodeCircle <span className="text-indigo-600">Arena</span></h1>
                         <div className="flex items-center gap-2 mt-1">
