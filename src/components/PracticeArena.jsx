@@ -287,6 +287,29 @@ const PracticeArena = ({ language = 'javascript' }) => {
                                 {q?.description}
                             </div>
 
+                            {q?.problemImage && (
+                                <div className="mb-8 p-1 bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden group shadow-sm transition-all hover:border-amber-200">
+                                    <div className="relative overflow-hidden rounded-2xl aspect-video bg-white flex items-center justify-center">
+                                       <img 
+                                           src={q.problemImage} 
+                                           alt="Design Reference" 
+                                           className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.05] cursor-zoom-in"
+                                           onClick={() => window.open(q.problemImage, '_blank')}
+                                       />
+                                       <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/50 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                           Click to expand
+                                       </div>
+                                    </div>
+                                    <div className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            <Eye size={12} className="text-amber-500" />
+                                            Design Protocol Artifact
+                                        </div>
+                                        <span className="text-[9px] font-bold text-slate-400 font-mono">REF://{q._id?.slice(-6).toUpperCase()}</span>
+                                    </div>
+                                </div>
+                            )}
+
                             {q?.type !== 'MCQ' && (
                                 <div className="space-y-6">
                                     {(q?.inputFormat || q?.outputFormat) && (

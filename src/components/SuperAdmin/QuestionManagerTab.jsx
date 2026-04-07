@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     Plus, Pencil, Trash2, X, Check, Filter, Loader2,
     ChevronDown, AlertTriangle, Eye, EyeOff, BookOpen, ClipboardCheck, Import, Search
@@ -262,6 +262,7 @@ const QuestionModal = ({ question, roundId, onClose, onSave }) => {
         correctAnswer: question?.correctAnswer || '',
         isManualEvaluation: question?.isManualEvaluation || false,
         assignedAdmin: question?.assignedAdmin?._id || question?.assignedAdmin || '',
+        sampleImage: question?.sampleImage || '',
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -460,6 +461,7 @@ const QuestionModal = ({ question, roundId, onClose, onSave }) => {
                             <div className="space-y-4">
                                 {field('Title *', 'title')}
                                 {field('Problem Statement / Prompt *', 'description', 'text', 4)}
+                                {field('Design Reference Image URL (Optional)', 'sampleImage', 'text')}
                             </div>
 
                             {form.type === 'MCQ' && (
@@ -779,6 +781,15 @@ const QuestionManagerTab = () => {
                                                     <div className="prose prose-sm prose-slate max-w-none">
                                                         <p className="leading-relaxed whitespace-pre-wrap font-medium">{q.description}</p>
                                                     </div>
+
+                                                    {q.sampleImage && (
+                                                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Design Reference</p>
+                                                            <div className="rounded-lg overflow-hidden border border-slate-100 max-w-sm">
+                                                                <img src={q.sampleImage} alt="Sample" className="w-full h-auto object-contain bg-slate-50" />
+                                                            </div>
+                                                        </div>
+                                                    )}
 
                                                     {q.type === 'MCQ' && q.options?.length > 0 && (
                                                         <div className="bg-white p-4 rounded-xl border border-slate-200">
