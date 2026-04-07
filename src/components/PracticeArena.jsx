@@ -4,8 +4,9 @@ import Editor from '@monaco-editor/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, CheckCircle, HelpCircle, Code2,
-    BookOpen, AlertTriangle, Power, ArrowLeft, Sparkles, Eye, EyeOff
+    BookOpen, AlertTriangle, Power, ArrowLeft, Sparkles, Eye, EyeOff, Save
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../store/authStore';
 import { SkeletonCodeArena } from './Skeleton';
@@ -28,6 +29,7 @@ const PracticeArena = ({ language = 'javascript' }) => {
     const [activeIdx, setActiveIdx] = useState(0);
     const [answers, setAnswers] = useState({});
     const [roundInfo, setRoundInfo] = useState(null);
+    const [pdfUrl, setPdfUrl] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState(null);
     const [showPreview, setShowPreview] = useState(true);
@@ -423,6 +425,89 @@ const PracticeArena = ({ language = 'javascript' }) => {
                                             </span>
                                         </button>
                                     ))}
+                                </div>
+                            </div>
+                        ) : (q?.type === 'UI_UX' || q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'UI_UX_CHALLENGE' || roundInfo?.type === 'MINI_HACKATHON') ? (
+                            <div className="p-4 sm:p-8 h-full overflow-y-auto custom-scrollbar flex flex-col items-center justify-center bg-slate-50/50 relative z-10">
+                                <div className="max-w-xl w-full space-y-8 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                            <Code2 size={32} />
+                                        </div>
+                                        <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                                            {(q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'MINI_HACKATHON') ? 'Mini Hackathon Submission (Practice)' : 'UI/UX Challenge Submission (Practice)'}
+                                        </h3>
+                                        <p className="text-slate-500 text-sm mt-2 font-medium">
+                                            {(q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'MINI_HACKATHON') ? 'Practice providing your GitHub repository link and project abstract.' : 'Practice providing your Figma project link and design snapshot.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                                {(q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'MINI_HACKATHON') ? 'GitHub Repository URL' : 'Figma Project URL'}
+                                            </label>
+                                            <input
+                                                type="url"
+                                                placeholder={(q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'MINI_HACKATHON') ? "https://github.com/username/repo" : "https://www.figma.com/file/..."}
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all font-medium text-slate-700"
+                                                value={currentAnswer || ''}
+                                                onChange={(e) => handleAnswerChange(q?._id, e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                                {(q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'MINI_HACKATHON') ? 'Project Abstract / Screenshots (PDF)' : 'Design Snapshot (PDF)'}
+                                            </label>
+                                            <label className={`block w-full border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${pdfUrl ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-300 hover:border-amber-400 hover:bg-amber-50/30 bg-slate-50'}`}>
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files[0];
+                                                        if (file && file.type === 'application/pdf') {
+                                                            if (file.size > 1 * 1024 * 1024) {
+                                                                toast.error("File size must be less than 1MB");
+                                                                return;
+                                                            }
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => {
+                                                                setPdfUrl(reader.result);
+                                                                toast.success("PDF attached (Local Preview only)");
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        } else if (file) {
+                                                            toast.error("Please upload a valid PDF file");
+                                                        }
+                                                    }}
+                                                />
+                                                {pdfUrl ? (
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <CheckCircle className="text-emerald-500" size={24} />
+                                                        <span className="text-sm font-bold text-emerald-700">
+                                                            {(q?.type === 'MINI_HACKATHON' || roundInfo?.type === 'MINI_HACKATHON') ? 'Project PDF Attached' : 'PDF Snapshot Attached'}
+                                                        </span>
+                                                        <span className="text-[10px] text-emerald-600/70 font-black uppercase tracking-widest">Click to replace</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Save className="text-slate-400" size={24} />
+                                                        <span className="text-sm font-bold text-slate-700">Select PDF File</span>
+                                                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Max size 1MB (Preview only)</span>
+                                                    </div>
+                                                )}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="pt-4 bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 items-start">
+                                        <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                                        <p className="text-[10px] text-amber-800 font-bold leading-relaxed uppercase tracking-tight">
+                                            Practice Notice: This is a simulation. Files and links are only stored in your browser session and will not be submitted to the grading server.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         ) : (q?.type === 'CODE' || q?.type === 'DEBUG' || q?.type === 'MISSING_BLOCK') ? (
