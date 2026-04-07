@@ -86,6 +86,14 @@ const CodeArena = ({ language = 'javascript' }) => {
             e.preventDefault();
             handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'PASTE_DETECTED' });
         };
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'TAB_SWITCH_DETECTED' });
+            }
+        };
+        const handleBlur = () => {
+            handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'WINDOW_BLUR_DETECTED' });
+        };
         const blockAction = (e) => {
             e.preventDefault();
             handleCheatDetected({ type: 'CHEAT_FLAG', detail: 'CONTEXT_MENU_DETECTED' });
@@ -128,6 +136,8 @@ const CodeArena = ({ language = 'javascript' }) => {
         window.addEventListener('contextmenu', blockAction, { capture: true });
         window.addEventListener('keydown', handleKeyDown, { capture: true });
         window.addEventListener('resize', handleResize);
+        window.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
 
         return () => {
             window.removeEventListener('paste', handlePaste, { capture: true });
@@ -136,6 +146,8 @@ const CodeArena = ({ language = 'javascript' }) => {
             window.removeEventListener('contextmenu', blockAction, { capture: true });
             window.removeEventListener('keydown', handleKeyDown, { capture: true });
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [handleCheatDetected, roundInfo]); // roundInfo in deps so guard re-evaluates after load
@@ -327,7 +339,7 @@ const CodeArena = ({ language = 'javascript' }) => {
                 <h1 className="text-5xl font-black tracking-tight text-slate-900 uppercase">Connection Terminated</h1>
                 <div className="max-w-lg mt-6 space-y-6">
                     <p className="text-slate-500 text-lg leading-relaxed">
-                        Security protocols were triggered. Your session has been flagged and suspended by the proctoring engine.
+                        Security protocols were triggered. Your session has been flagged and suspended by the proctoring engine. <b>Your current score has been recorded as ZERO.</b>
                     </p>
                     <div className="bg-white border-2 border-red-100 p-6 rounded-2xl shadow-xl shadow-red-500/5">
                         <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Violation Record</span>
