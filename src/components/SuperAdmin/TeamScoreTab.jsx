@@ -133,7 +133,10 @@ const TeamScoreTab = () => {
                                                 <p className="font-black text-slate-800 uppercase tracking-tight text-sm">{team.name}</p>
                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                     {team.members?.slice(0, 3).map(m => (
-                                                        <span key={m._id} className="text-[9px] text-slate-400 font-bold">{m.name}</span>
+                                                        <span key={m._id} className="text-[9px] text-slate-400 font-bold flex items-center gap-1">
+                                                            <div className={`w-1 h-1 rounded-full ${m.isOnboarded ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                                            {m.name}
+                                                        </span>
                                                     ))}
                                                     {team.members?.length > 3 && (
                                                         <span className="text-[9px] text-indigo-400 font-black">+{team.members.length - 3} MORE</span>

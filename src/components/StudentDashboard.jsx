@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Clock, Play, CheckCircle, ArrowRight, Sparkles, Loader2, AlertTriangle, ShieldAlert, FileDown, Timer, Users, Send, RefreshCw, XCircle, BookOpen } from 'lucide-react';
+import { Lock, Clock, Play, CheckCircle, ArrowRight, Sparkles, Loader2, AlertTriangle, ShieldAlert, FileDown, Timer, Users, Send, RefreshCw, XCircle, BookOpen, CalendarClock, MessageSquare, X } from 'lucide-react';
 import OtpGate from './OtpGate';
 import { useAuthStore, api } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +40,13 @@ const StudentDashboard = () => {
     const [teamRequestStatus, setTeamRequestStatus] = useState(user?.teamRequest?.status || 'NONE');
     const [teamRequestMsg, setTeamRequestMsg] = useState(user?.teamRequest?.message || '');
     const [submittingRequest, setSubmittingRequest] = useState(false);
+
+    // Slot change request state
+    const [showSlotModal, setShowSlotModal] = useState(false);
+    const [slotChangeRoundId, setSlotChangeRoundId] = useState(null);
+    const [slotReason, setSlotReason] = useState('');
+    const [submittingSlotRequest, setSubmittingSlotRequest] = useState(false);
+    const [slotRequests, setSlotRequests] = useState(user?.slotChangeRequests || []);
 
     // High-end animation variants for staggered entry
     const containerVariants = {
@@ -197,6 +204,31 @@ const StudentDashboard = () => {
         return null;
     };
 
+    // Get the slot status for a round (based on mySlot field from backend)
+    const getSlotStatus = (slot) => {
+        if (!slot) return null;
+        const now = new Date();
+        const start = new Date(slot.startTime);
+        const end = new Date(slot.endTime);
+        if (now < start) {
+            return { type: 'UPCOMING', label: 'Upcoming Slot', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' };
+        }
+        if (now >= start && now <= end) {
+            return { type: 'ACTIVE', label: 'Slot Active Now', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' };
+        }
+        return { type: 'EXPIRED', label: 'Slot Expired', color: 'text-slate-400', bg: 'bg-slate-50', border: 'border-slate-100' };
+    };
+
+    const formatSlotTime = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+    };
+
+    const formatSlotDate = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
+    };
+
     const handleRoundClick = (round) => {
         const isPractice = round.type === 'PRACTICE' || round.type === 'PRACTISE';
 
@@ -212,6 +244,19 @@ const StudentDashboard = () => {
                 handlePracticeStart(round._id);
             }
             return;
+        }
+
+        // Slot timing enforcement (only for non-practice rounds with an assigned slot)
+        if (round.mySlot) {
+            const slotStatus = getSlotStatus(round.mySlot);
+            if (slotStatus?.type === 'UPCOMING') {
+                toast.error(`Your slot starts at ${formatSlotTime(round.mySlot.startTime)} on ${formatSlotDate(round.mySlot.startTime)}. Please wait.`);
+                return;
+            }
+            if (slotStatus?.type === 'EXPIRED' && round.mySubmissionStatus !== 'IN_PROGRESS') {
+                toast.error('Your assigned slot has expired. Request a slot change if needed.');
+                return;
+            }
         }
 
         const windowStatus = getTimeWindowStatus(round);
@@ -263,6 +308,23 @@ const StudentDashboard = () => {
             toast.error(e.response?.data?.error || 'Failed to submit request.');
         } finally {
             setSubmittingRequest(false);
+        }
+    };
+
+    const handleSlotChangeRequest = async () => {
+        if (!slotReason.trim() || !slotChangeRoundId) return;
+        setSubmittingSlotRequest(true);
+        try {
+            await api.post('/auth/slot-change-request', { roundId: slotChangeRoundId, reason: slotReason.trim() });
+            setSlotRequests(prev => [...prev, { roundId: slotChangeRoundId, status: 'PENDING', reason: slotReason.trim() }]);
+            toast.success('Slot change request submitted successfully.');
+            setShowSlotModal(false);
+            setSlotReason('');
+            setSlotChangeRoundId(null);
+        } catch (e) {
+            toast.error(e.response?.data?.error || 'Failed to submit slot change request.');
+        } finally {
+            setSubmittingSlotRequest(false);
         }
     };
 
@@ -369,16 +431,30 @@ const StudentDashboard = () => {
                                             {user.team.members.map((member, i) => (
                                                 <div 
                                                     key={i} 
+                                                    title={member.isOnboarded ? 'Onboarded' : 'Pending Onboarding'}
                                                     className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider flex items-center gap-2 transition-all duration-300
                                                         ${member._id === user._id 
                                                             ? 'bg-indigo-600 text-white border-indigo-700 shadow-md shadow-indigo-100 scale-105' 
                                                             : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-white hover:border-slate-200 hover:text-slate-700'}`}
                                                 >
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${member._id === user._id ? 'bg-white animate-pulse' : 'bg-slate-300'}`} />
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${member._id === user._id ? 'bg-white animate-pulse' : (member.isOnboarded ? 'bg-emerald-500' : 'bg-amber-500')}`} />
                                                     {member.name}
+                                                    {!member.isOnboarded && member._id !== user._id && (
+                                                        <span className="text-[8px] text-red-500 font-black ml-1 opacity-80 animate-pulse">
+                                                            (NOT ONBOARDED)
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
+                                        {user.team.members?.some(m => !m.isOnboarded && m._id !== user._id) && (
+                                            <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-lg border border-red-100 animate-in fade-in slide-in-from-top-1">
+                                                <AlertTriangle size={10} />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">
+                                                    Your team member not onboarded
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -386,6 +462,62 @@ const StudentDashboard = () => {
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Team Reference</span>
                                     <span className="text-[10px] font-bold font-mono text-slate-600 tracking-tight">#{user.team._id?.slice(-8).toUpperCase() || 'ROOT-NODE'}</span>
                                 </div>
+
+                                {/* Slot Schedule Section */}
+                                {(() => {
+                                    // Find the next round with a slot for this user
+                                    const roundsWithSlots = rounds.filter(r => r.mySlot);
+                                    const nextSlotRound = roundsWithSlots.find(r => {
+                                        const status = getSlotStatus(r.mySlot);
+                                        return status?.type === 'ACTIVE' || status?.type === 'UPCOMING';
+                                    }) || roundsWithSlots[0];
+
+                                    if (!nextSlotRound) return (
+                                        <div className="mt-3 px-4 py-3 bg-amber-50 border border-amber-100 rounded-2xl">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <CalendarClock size={14} className="text-amber-500" />
+                                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Slot Schedule</span>
+                                            </div>
+                                            <p className="text-[11px] font-bold text-amber-700">No slot assigned yet. The admin will assign your test slot.</p>
+                                        </div>
+                                    );
+
+                                    const slotStatus = getSlotStatus(nextSlotRound.mySlot);
+                                    return (
+                                        <div className={`mt-3 px-4 py-3 ${slotStatus.bg} border ${slotStatus.border} rounded-2xl`}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <CalendarClock size={14} className={slotStatus.color} />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'inherit' }}>
+                                                        <span className={slotStatus.color}>My Slot</span>
+                                                    </span>
+                                                </div>
+                                                <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${slotStatus.bg} ${slotStatus.border} ${slotStatus.color} ${slotStatus.type === 'ACTIVE' ? 'animate-pulse' : ''}`}>
+                                                    {slotStatus.label}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-black text-slate-800 mb-1">{nextSlotRound.name}</p>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-1">
+                                                    <Clock size={10} className="text-slate-400" />
+                                                    <span className="text-[10px] font-bold text-slate-600">
+                                                        {formatSlotDate(nextSlotRound.mySlot.startTime)} · {formatSlotTime(nextSlotRound.mySlot.startTime)} – {formatSlotTime(nextSlotRound.mySlot.endTime)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {nextSlotRound.mySlot.label && (
+                                                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Slot: {nextSlotRound.mySlot.label}</p>
+                                            )}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setSlotChangeRoundId(nextSlotRound._id); setShowSlotModal(true); }}
+                                                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[9px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all active:scale-95"
+                                            >
+                                                <MessageSquare size={10} />
+                                                Request Slot Change
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </motion.div>
                     )}
@@ -494,6 +626,34 @@ const StudentDashboard = () => {
                                                         {round.totalSections > 1 && <span className="text-[10px] uppercase font-black tracking-widest text-indigo-500 bg-indigo-50 px-2 rounded-md">{round.totalSections} Sections</span>}
                                                     </div>
                                                     {!isPractice && windowStatus && <div className={`flex items-center gap-1.5 text-[11px] font-bold ${windowStatus.color}`}><Timer size={12} /> {windowStatus.label}</div>}
+                                                    {/* Slot timing info on card */}
+                                                    {!isPractice && (() => {
+                                                        const slot = round.mySlot;
+                                                        const existingRequest = slotRequests.find(r => r.roundId === round._id);
+                                                        if (!slot) return (
+                                                            <div className="flex items-center gap-1.5 mt-1">
+                                                                <CalendarClock size={11} className="text-amber-400" />
+                                                                <span className="text-[10px] font-bold text-amber-500">No Slot Assigned</span>
+                                                            </div>
+                                                        );
+                                                        const ss = getSlotStatus(slot);
+                                                        return (
+                                                            <div className="flex flex-col gap-1 mt-1">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <CalendarClock size={11} className={ss.color} />
+                                                                    <span className={`text-[10px] font-bold ${ss.color}`}>
+                                                                        Your Slot: {formatSlotTime(slot.startTime)} – {formatSlotTime(slot.endTime)}
+                                                                    </span>
+                                                                    {ss.type === 'ACTIVE' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                                                                </div>
+                                                                {existingRequest && (
+                                                                    <span className={`text-[9px] font-black uppercase tracking-wider ${existingRequest.status === 'PENDING' ? 'text-amber-500' : existingRequest.status === 'APPROVED' ? 'text-emerald-500' : 'text-red-500'}`}>
+                                                                        Slot Change: {existingRequest.status}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                             <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -501,6 +661,15 @@ const StudentDashboard = () => {
                                                     {isPractice ? (isFinished ? 'Verdict: Sealed' : 'Mode: Manual Validation') : `Status: ${config.label}`}
                                                 </p>
                                                 <div className="flex items-center gap-2">
+                                                    {!isPractice && round.mySlot && !isFinished && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setSlotChangeRoundId(round._id); setShowSlotModal(true); }}
+                                                            className="p-2 text-slate-300 hover:text-indigo-500 rounded-lg transition-colors"
+                                                            title="Request Slot Change"
+                                                        >
+                                                            <MessageSquare size={14} />
+                                                        </button>
+                                                    )}
                                                     {isInteractable && <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 transition-all group-hover:bg-indigo-600 group-hover:text-white transform group-hover:translate-x-1"><ArrowRight size={14} /></div>}
                                                 </div>
                                             </div>
@@ -515,6 +684,129 @@ const StudentDashboard = () => {
             </main>
 
             <OtpGate isOpen={isOtpOpen} roundId={selectedRound?._id} roundName={selectedRound?.name} onClose={() => setIsOtpOpen(false)} onUnlock={handleOtpUnlock} />
+
+            {/* Slot Change Request Modal */}
+            <AnimatePresence>
+                {showSlotModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-100 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={e => e.target === e.currentTarget && setShowSlotModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 10 }}
+                            className="bg-white border border-slate-200 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"
+                        >
+                            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-indigo-50/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                                        <CalendarClock size={18} />
+                                    </div>
+                                    <div>
+                                        <h2 className="font-bold text-slate-900 text-lg">Request Slot Change</h2>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                            {rounds.find(r => r._id === slotChangeRoundId)?.name || 'Assessment'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={() => { setShowSlotModal(false); setSlotReason(''); }} className="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            {(() => {
+                                const existingRequest = slotRequests.find(r => r.roundId === slotChangeRoundId);
+                                if (existingRequest?.status === 'PENDING') {
+                                    return (
+                                        <div className="p-8 text-center space-y-4">
+                                            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+                                                <Loader2 size={28} className="animate-spin" />
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-900 font-black text-lg">Request Pending</p>
+                                                <p className="text-slate-500 text-sm mt-1">Your slot change request is under review by the admin.</p>
+                                            </div>
+                                            <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Reason</p>
+                                                <p className="text-xs text-slate-600 italic">"{existingRequest.reason}"</p>
+                                            </div>
+                                            <button onClick={() => setShowSlotModal(false)} className="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 font-bold transition-colors">
+                                                Close
+                                            </button>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="p-6 space-y-5">
+                                        {/* Current slot info */}
+                                        {(() => {
+                                            const currentRound = rounds.find(r => r._id === slotChangeRoundId);
+                                            if (currentRound?.mySlot) {
+                                                const ss = getSlotStatus(currentRound.mySlot);
+                                                return (
+                                                    <div className={`p-3 ${ss.bg} border ${ss.border} rounded-xl`}>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Slot</p>
+                                                        <p className={`text-sm font-bold ${ss.color}`}>
+                                                            {formatSlotDate(currentRound.mySlot.startTime)} · {formatSlotTime(currentRound.mySlot.startTime)} – {formatSlotTime(currentRound.mySlot.endTime)}
+                                                        </p>
+                                                        {currentRound.mySlot.label && <p className="text-[9px] font-bold text-slate-400 mt-0.5">{currentRound.mySlot.label}</p>}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
+
+                                        <div>
+                                            <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                                Reason for Change *
+                                            </label>
+                                            <textarea
+                                                value={slotReason}
+                                                onChange={e => setSlotReason(e.target.value)}
+                                                placeholder="Explain why you need a different slot timing..."
+                                                rows={4}
+                                                required
+                                                autoFocus
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-none"
+                                            />
+                                        </div>
+
+                                        {existingRequest?.status === 'REJECTED' && (
+                                            <div className="flex items-center gap-2 text-red-600 text-xs font-bold bg-red-50 border border-red-200 rounded-xl p-3">
+                                                <XCircle size={14} className="shrink-0" />
+                                                <p>Previous request was rejected{existingRequest.adminMessage ? `: ${existingRequest.adminMessage}` : '.'}</p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex gap-3 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setShowSlotModal(false); setSlotReason(''); }}
+                                                className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors font-bold text-sm"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleSlotChangeRequest}
+                                                disabled={submittingSlotRequest || !slotReason.trim()}
+                                                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 rounded-xl text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-200 active:scale-95 text-sm"
+                                            >
+                                                {submittingSlotRequest ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                                                Submit Request
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, BookOpen, LogOut, Users, PlayCircle, ClipboardCheck, Trophy, ClipboardList, UserCog, UserCheck, Activity, Power } from 'lucide-react';
 import { api, useAuthStore } from '../../store/authStore';
 import { API } from '../SuperAdmin/constants';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 // Tab Components
 import LiveOpsTab from '../SuperAdmin/LiveOpsTab';
@@ -16,6 +16,10 @@ import TeamScoreTab from '../SuperAdmin/TeamScoreTab';
 import AdminManagerTab from '../SuperAdmin/AdminManagerTab';
 import AttendanceTab from '../SuperAdmin/AttendanceTab';
 
+// New Integrated Tabs
+import MyAdminAssignmentsTab from '../SuperAdmin/MyAdminAssignmentsTab';
+import LiveDashboardTab from '../SuperAdmin/LiveDashboardTab';
+
 const TABS = [
     { id: 'liveops', label: 'Live Operations', icon: PlayCircle },
     { id: 'students', label: 'Students', icon: Users },
@@ -27,6 +31,8 @@ const TABS = [
     { id: 'teams', label: 'Teams', icon: Users },
     { id: 'team-scores', label: 'Team Leaderboard', icon: Trophy },
     { id: 'attendance', label: 'Attendance', icon: UserCheck },
+    { id: 'tasks', label: 'My Tasks', icon: ClipboardList },
+    { id: 'command-center', label: 'Command Center', icon: PlayCircle },
 ];
 
 const SystemHealth = () => {
@@ -42,8 +48,7 @@ const SystemHealth = () => {
     }, []);
 
     useEffect(() => {
-        checkQueue();
-        const t = setInterval(checkQueue, 5000); // Pulse every 5 seconds
+        const t = setInterval(checkQueue, 5000);
         return () => clearInterval(t);
     }, [checkQueue]);
 
@@ -81,7 +86,6 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchRounds();
-        // Light polling to keep the round states fresh for the Question Manager & Live Ops
         const t = setInterval(fetchRounds, 30000);
         return () => clearInterval(t);
     }, [fetchRounds]);
@@ -198,6 +202,8 @@ const AdminDashboard = () => {
                                 {activeTab === 'teams' && <TeamManagerTab />}
                                 {activeTab === 'team-scores' && <TeamScoreTab />}
                                 {activeTab === 'attendance' && <AttendanceTab />}
+                                {activeTab === 'tasks' && <MyAdminAssignmentsTab />}
+                                {activeTab === 'command-center' && <LiveDashboardTab />}
                             </div>
                         </div>
 

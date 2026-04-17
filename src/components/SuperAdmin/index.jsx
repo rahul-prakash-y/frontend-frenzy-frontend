@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, BookOpen, ClipboardList, LogOut,
   Activity, UserCog, Users, PlayCircle, ClipboardCheck, Trophy, UserCheck,
-  Power, Award, Zap
+  Power, Award, Zap, TrendingUp, Server, Database
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useRoundStore } from '../../store/roundStore';
@@ -25,6 +25,14 @@ import AttendanceTab from './AttendanceTab';
 import CertificatesTab from './CertificatesTab';
 import PracticeDashboardTab from './PracticeDashboardTab';
 
+// New Integrated Tabs
+import LiveDashboardTab from './LiveDashboardTab';
+import SystemHealthTab from './SystemHealthTab';
+import DatabaseManagerTab from './DatabaseManagerTab';
+import AdminContributionsTab from './AdminContributionsTab';
+import ServerAllocationTab from './ServerAllocationTab';
+import CertificateManager from './CertificateManager';
+
 const TABS = [
   { id: 'liveops', label: 'Live Operations', icon: PlayCircle },
   { id: 'activity', label: 'Activity Logs', icon: Activity },
@@ -40,6 +48,11 @@ const TABS = [
   { id: 'team-scores', label: 'Team Leaderboard', icon: Trophy },
   { id: 'attendance', label: 'Attendance', icon: UserCheck },
   { id: 'certificates', label: 'Certificates', icon: Award },
+  { id: 'live-monitor', label: 'Command Center', icon: Activity },
+  { id: 'health', label: 'System Health', icon: Activity },
+  { id: 'db-manager', label: 'DB Manager', icon: Database },
+  { id: 'admin-stats', label: 'Admin Stats', icon: TrendingUp },
+  { id: 'servers', label: 'Server Fleet', icon: Server },
 ];
 
 const SuperAdminDashboard = () => {
@@ -163,8 +176,13 @@ const SuperAdminDashboard = () => {
                 {activeTab === 'teams' && <TeamManagerTab />}
                 {activeTab === 'team-scores' && <TeamScoreTab />}
                 {activeTab === 'attendance' && <AttendanceTab />}
-                {activeTab === 'certificates' && <CertificatesTab />}
+                {activeTab === 'certificates' && <CertificateManager />}
                 {activeTab === 'practice' && <PracticeDashboardTab />}
+                {activeTab === 'live-monitor' && <LiveDashboardTab />}
+                {activeTab === 'health' && <SystemHealthTab />}
+                {activeTab === 'db-manager' && <DatabaseManagerTab />}
+                {activeTab === 'admin-stats' && <AdminContributionsTab />}
+                {activeTab === 'servers' && <ServerAllocationTab />}
               </div>
             </div>
 

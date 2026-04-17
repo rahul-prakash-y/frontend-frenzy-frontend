@@ -184,6 +184,7 @@ const TeamCard = ({ team, allStudents, onUpdate, onDelete }) => {
                     <div className="flex flex-wrap gap-2">
                         {team.members.map(member => (
                             <div key={member._id} className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg flex items-center gap-2 group/member">
+                                <div className={`w-1.5 h-1.5 rounded-full ${member.isOnboarded ? 'bg-emerald-500' : 'bg-amber-500'}`} title={member.isOnboarded ? 'Onboarded' : 'Pending Onboarding'} />
                                 <span className="text-[10px] font-black text-slate-700 uppercase">{member.name}</span>
                                 <span className="text-[9px] font-bold text-slate-400 font-mono">{member.studentId}</span>
                             </div>
